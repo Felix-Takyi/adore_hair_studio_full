@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: adore-hair-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/public/settings
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
