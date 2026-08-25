@@ -2054,44 +2054,34 @@
        DELETE
     ========================================================= */
 
-    async function del(type, id) {
+ async function del(type, id) {
+    const ok = confirm(
+        'Are you sure you want to permanently delete this item?'
+    );
 
-        if (
-            !confirm(
-                'Delete this item?'
-            )
-        ) {
-            return;
-        }
+    if (!ok) return;
 
+    try {
+        await api(
+            '/api/admin/' + type + '/' + id,
+            {
+                method: 'DELETE'
+            }
+        );
 
-        try {
+        alert('Deleted successfully.');
 
-            await api(
+        await load();
 
-                '/api/admin/'
-                + type
-                + '/'
-                + id,
+    } catch (e) {
+        console.error('Delete failed:', e);
 
-                {
-                    method: 'DELETE'
-                }
-            );
-
-
-            load();
-
-
-        } catch (e) {
-
-            alert(
-                'Could not delete item: '
-                + e.message
-            );
-        }
+        alert(
+            'Could not delete this item.\n\n' +
+            e.message
+        );
     }
-
+}
 
     /* =========================================================
        START
