@@ -63,5 +63,52 @@ async function markRead(id){await api('/api/admin/messages/'+id+'/read',{method:
 function renderSettings(x){content.innerHTML=`<h2>Site Settings</h2><div class="grid"><label>Phone<input id="xphone" value="${esc(x.phone||'')}"></label><label>WhatsApp digits<input id="xwa" value="${esc(x.whatsapp||'')}"></label><label>Email<input id="xemail" value="${esc(x.email||'')}"></label><label>Instagram URL<input id="xig" value="${esc(x.instagram||'')}"></label><label>Address<input id="xaddress" value="${esc(x.address||'')}"></label><label>Hero eyebrow<input id="xeye" value="${esc(x.heroEyebrow||'')}"></label></div><br><label>Hero title<input id="xtitle" value="${esc(x.heroTitle||'')}"></label><br><br><label>Hero tagline<textarea id="xtag">${esc(x.heroTagline||'')}</textarea></label><br><button class="btn primary" onclick="saveSettings()">Save settings</button>`}
 async function saveSettings(){await api('/api/admin/settings',{method:'PUT',body:JSON.stringify({id:1,phone:xphone.value,whatsapp:xwa.value,email:xemail.value,instagram:xig.value,address:xaddress.value,heroEyebrow:xeye.value,heroTitle:xtitle.value,heroTagline:xtag.value})});alert('Saved');load()}
 async function del(type,id){if(!confirm('Delete this item?'))return;await api('/api/admin/'+type+'/'+id,{method:'DELETE'});load()}
+async function uploadProductImage() {
+
+    const file = document.getElementById('pfile').files[0];
+
+    if (!file) {
+        alert('Choose an image first.');
+        return;
+    }
+
+    const status = document.getElementById('uploadStatus');
+
+    status.textContent = ' Uploading...';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+
+        const res = await fetch('/api/admin/images/upload', {
+            method: 'POST',
+            headers: {
+                Authorization: 'Bearer ' + token
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error(await res.text());
+        }
+
+        const result = await res.json();
+
+        document.getElementById('pimg').value = result.url;
+
+        document.getElementById('imagePreview').innerHTML =
+            `<img src="${result.url}"
+                  style="max-width:180px;margin-top:10px;border-radius:10px">`;
+
+        status.textContent = ' Uploaded successfully';
+
+    } catch (e) {
+
+        console.error(e);
+
+        status.textContent = ' Upload failed';
+    }
+}
 if(token)showApp();else showLogin();
 </script></body></html>
