@@ -1,13 +1,25 @@
 package com.adorehairstudio.api.controller;
 
-import com.adorehairstudio.api.model.*;
-import com.adorehairstudio.api.repo.*;
+import com.adorehairstudio.api.model.ContactMessage;
+import com.adorehairstudio.api.model.Product;
+import com.adorehairstudio.api.model.ServiceItem;
+import com.adorehairstudio.api.model.SiteSettings;
+import com.adorehairstudio.api.model.Testimonial;
+
+import com.adorehairstudio.api.repo.ContactMessageRepository;
+import com.adorehairstudio.api.repo.ProductRepository;
+import com.adorehairstudio.api.repo.ServiceItemRepository;
+import com.adorehairstudio.api.repo.SiteSettingsRepository;
+import com.adorehairstudio.api.repo.TestimonialRepository;
+
 import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Comparator;
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/admin")
@@ -18,6 +30,7 @@ public class AdminController {
     private final TestimonialRepository testimonialRepository;
     private final ContactMessageRepository messageRepository;
     private final SiteSettingsRepository settingsRepository;
+
 
     public AdminController(
             ProductRepository productRepository,
@@ -49,6 +62,7 @@ public class AdminController {
             @Valid @RequestBody Product product
     ) {
         product.setId(null);
+
         return productRepository.save(product);
     }
 
@@ -65,9 +79,10 @@ public class AdminController {
 
         product.setId(id);
 
-        return ResponseEntity.ok(
-                productRepository.save(product)
-        );
+        Product savedProduct =
+                productRepository.save(product);
+
+        return ResponseEntity.ok(savedProduct);
     }
 
 
@@ -100,7 +115,9 @@ public class AdminController {
     public ServiceItem addService(
             @Valid @RequestBody ServiceItem service
     ) {
+
         service.setId(null);
+
         return serviceRepository.save(service);
     }
 
@@ -117,9 +134,10 @@ public class AdminController {
 
         service.setId(id);
 
-        return ResponseEntity.ok(
-                serviceRepository.save(service)
-        );
+        ServiceItem savedService =
+                serviceRepository.save(service);
+
+        return ResponseEntity.ok(savedService);
     }
 
 
@@ -152,7 +170,9 @@ public class AdminController {
     public Testimonial addTestimonial(
             @Valid @RequestBody Testimonial testimonial
     ) {
+
         testimonial.setId(null);
+
         return testimonialRepository.save(testimonial);
     }
 
@@ -169,9 +189,10 @@ public class AdminController {
 
         testimonial.setId(id);
 
-        return ResponseEntity.ok(
-                testimonialRepository.save(testimonial)
-        );
+        Testimonial savedTestimonial =
+                testimonialRepository.save(testimonial);
+
+        return ResponseEntity.ok(savedTestimonial);
     }
 
 
@@ -226,9 +247,10 @@ public class AdminController {
 
         message.setReadMessage(true);
 
-        return ResponseEntity.ok(
-                messageRepository.save(message)
-        );
+        ContactMessage savedMessage =
+                messageRepository.save(message);
+
+        return ResponseEntity.ok(savedMessage);
     }
 
 
@@ -269,15 +291,4 @@ public class AdminController {
 
         return settingsRepository.save(settings);
     }
-}package com.adorehairstudio.api.controller;
-import com.adorehairstudio.api.model.*; import com.adorehairstudio.api.repo.*; import jakarta.validation.Valid; import org.springframework.http.ResponseEntity; import org.springframework.web.bind.annotation.*; import java.util.*;
-@RestController @RequestMapping("/api/admin")
-public class AdminController {
- private final ProductRepository p; private final ServiceItemRepository s; private final TestimonialRepository t; private final ContactMessageRepository m; private final SiteSettingsRepository st;
- public AdminController(ProductRepository p,ServiceItemRepository s,TestimonialRepository t,ContactMessageRepository m,SiteSettingsRepository st){this.p=p;this.s=s;this.t=t;this.m=m;this.st=st;}
- @GetMapping("/products") public List<Product> products(){return p.findAll();} @PostMapping("/products") public Product add(@Valid @RequestBody Product x){x.setId(null);return p.save(x);} @PutMapping("/products/{id}") public Product update(@PathVariable Long id,@Valid @RequestBody Product x){x.setId(id);return p.save(x);} @DeleteMapping("/products/{id}") public void del(@PathVariable Long id){p.deleteById(id);}
- @GetMapping("/services") public List<ServiceItem> services(){return s.findAll();} @PostMapping("/services") public ServiceItem addS(@Valid @RequestBody ServiceItem x){x.setId(null);return s.save(x);} @PutMapping("/services/{id}") public ServiceItem updateS(@PathVariable Long id,@Valid @RequestBody ServiceItem x){x.setId(id);return s.save(x);} @DeleteMapping("/services/{id}") public void delS(@PathVariable Long id){s.deleteById(id);}
- @GetMapping("/testimonials") public List<Testimonial> testimonials(){return t.findAll();} @PostMapping("/testimonials") public Testimonial addT(@Valid @RequestBody Testimonial x){x.setId(null);return t.save(x);} @PutMapping("/testimonials/{id}") public Testimonial updateT(@PathVariable Long id,@Valid @RequestBody Testimonial x){x.setId(id);return t.save(x);} @DeleteMapping("/testimonials/{id}") public void delT(@PathVariable Long id){t.deleteById(id);}
- @GetMapping("/messages") public List<ContactMessage> messages(){return m.findAll().stream().sorted(Comparator.comparing(ContactMessage::getCreatedAt).reversed()).toList();} @PutMapping("/messages/{id}/read") public ResponseEntity<?> read(@PathVariable Long id){var found=m.findById(id); if(found.isEmpty()) return ResponseEntity.notFound().build(); var x=found.get(); x.setReadMessage(true); m.save(x); return ResponseEntity.ok(x);} @DeleteMapping("/messages/{id}") public void delM(@PathVariable Long id){m.deleteById(id);}
- @GetMapping("/settings") public SiteSettings settings(){return st.findById(1L).orElseGet(SiteSettings::new);} @PutMapping("/settings") public SiteSettings settings(@RequestBody SiteSettings x){x.setId(1L);return st.save(x);}
 }
