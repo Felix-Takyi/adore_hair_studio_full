@@ -1,8 +1,96 @@
 package com.adorehairstudio.api.config;
-import com.adorehairstudio.api.security.JwtFilter; import org.springframework.beans.factory.annotation.Value; import org.springframework.context.annotation.*; import org.springframework.security.config.annotation.web.builders.HttpSecurity; import org.springframework.security.config.http.SessionCreationPolicy; import org.springframework.security.crypto.bcrypt.*; import org.springframework.security.crypto.password.PasswordEncoder; import org.springframework.security.web.SecurityFilterChain; import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; import org.springframework.web.cors.*; import java.util.*;
+
+import com.adorehairstudio.api.security.JwtFilter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 public class SecurityConfig {
- @Bean PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder(12);}
- @Bean CorsConfigurationSource cors(@Value("${app.cors.allowed-origins}") String origins){ CorsConfiguration c=new CorsConfiguration(); c.setAllowedOrigins(Arrays.stream(origins.split(",")).map(String::trim).filter(x->!x.isBlank()).toList()); c.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS")); c.setAllowedHeaders(List.of("*") ); c.setAllowCredentials(false); UrlBasedCorsConfigurationSource s=new UrlBasedCorsConfigurationSource(); s.registerCorsConfiguration("/**",c); return s; }
- @Bean SecurityFilterChain chain(HttpSecurity h,JwtFilter f)throws Exception{return h.csrf(cs->cs.disable()).cors(c->{}).sessionManagement(sm->sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(a->a.requestMatchers("/api/public/**","/api/auth/login","/admin.html","/","/error","/favicon.ico").permitAll().requestMatchers("/api/admin/**").authenticated().anyRequest().permitAll()).addFilterBefore(f,UsernamePasswordAuthenticationFilter.class).build();}
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(
+            @Value("${app.cors.allowed-origins}") String origins) {
+
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(
+                Arrays.stream(origins.split(","))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isBlank())
+                        .toList()
+        );
+
+        config.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+        );
+
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(false);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtFilter jwtFilter,
+            CorsConfigurationSource corsConfigurationSource
+    ) throws Exception {
+
+        http
+                .csrf(csrf -> csrf.disable())
+
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/public/**",
+                                "/api/auth/login",
+                                "/admin.html",
+                                "/",
+                                "/error",
+                                "/favicon.ico"
+                        ).permitAll()
+
+                        .requestMatchers("/api/admin/**").authenticated()
+
+                        .anyRequest().permitAll()
+                )
+
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
+
+        return http.build();
+    }
 }
