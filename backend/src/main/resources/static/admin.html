@@ -1,114 +1,2109 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Adore Hair Studio Admin</title><style>
-:root{--g:#c9a84c;--b:#0b0b0b;--bg:#f6f3ed;--card:#fff;--muted:#777}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#181818}header{background:var(--b);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}header strong{color:var(--g)}main{max-width:1200px;margin:30px auto;padding:0 18px}.card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 6px 24px #0000000d;margin-bottom:20px}.hidden{display:none}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.tabs button,.btn{border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:700}.tabs button.active,.btn.primary{background:var(--b);color:var(--g)}.btn.danger{background:#a72626;color:#fff}.btn.secondary{background:#ece7db}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{font-size:12px;font-weight:700;color:#555}input,textarea,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px}textarea{min-height:90px}.row{border-top:1px solid #eee;padding:14px 0;display:flex;justify-content:space-between;gap:15px}.row:first-child{border-top:0}.row small{color:var(--muted)}.actions{display:flex;gap:8px;align-items:center}.login{max-width:420px;margin:80px auto}.notice{padding:10px;border-radius:8px;background:#fff2c7;margin-bottom:12px}.msg-unread{font-weight:700}@media(max-width:700px){.grid{grid-template-columns:1fr}.row{flex-direction:column}.actions{flex-wrap:wrap}}</style></head><body>
-<header><div><strong>ADORE</strong> Hair Studio Admin</div><button class="btn secondary" id="logoutBtn" onclick="logout()">Logout</button></header>
-<main>
-<section id="loginView" class="card login"><h2>Admin Login</h2><div class="notice">Use the ADMIN_EMAIL and ADMIN_PASSWORD configured on the backend.</div><label>Email<input id="loginEmail" type="email"></label><br><br><label>Password<input id="loginPassword" type="password"></label><br><br><button class="btn primary" onclick="login()">Sign in</button><p id="loginErr"></p></section>
-<section id="appView" class="hidden"><div class="tabs"><button data-tab="products" class="active">Products</button><button data-tab="services">Services</button><button data-tab="testimonials">Testimonials</button><button data-tab="messages">Messages</button><button data-tab="settings">Site Settings</button></div><div id="content" class="card"></div></section>
-</main><script>
-let token=localStorage.getItem('adore_admin_token')||'';let tab='products';const api=(path,opt={})=>fetch(path,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{}),...(token?{Authorization:'Bearer '+token}:{})}}).then(async r=>{if(r.status===401){logout();throw Error('Session expired')}if(!r.ok)throw Error((await r.text())||'Request failed');return r.status===204?null:r.json()});
-function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('appView').classList.remove('hidden');document.getElementById('logoutBtn').style.visibility='visible';load()};function showLogin(){document.getElementById('loginView').classList.remove('hidden');document.getElementById('appView').classList.add('hidden');document.getElementById('logoutBtn').style.visibility='hidden'}
-async function login(){try{const r=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:loginEmail.value,password:loginPassword.value})});token=r.token;localStorage.setItem('adore_admin_token',token);showApp()}catch(e){loginErr.textContent=e.message}}
-function logout(){token='';localStorage.removeItem('adore_admin_token');showLogin()}
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');tab=b.dataset.tab;load()});
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const arg = x =>
-  JSON.stringify(x)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e');
-async function load(){content.innerHTML='Loading…';try{if(tab==='products')renderProducts(await api('/api/admin/products'));if(tab==='services')renderServices(await api('/api/admin/services'));if(tab==='testimonials')renderTestimonials(await api('/api/admin/testimonials'));if(tab==='messages')renderMessages(await api('/api/admin/messages'));if(tab==='settings')renderSettings(await api('/api/admin/settings'))}catch(e){content.innerHTML='<p>'+esc(e.message)+'</p>'}}
-function renderProducts(xs){content.innerHTML=`<h2>Products</h2><p>Add/edit products. For images, use an existing frontend filename such as <b>wig2.jpg</b> or a public Cloudinary image URL.</p><button class="btn primary" onclick="productForm()">+ Add product</button><div id="form"></div><div>${xs.map(x=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>GH₵ ${esc(x.price)} · ${esc(x.category||'')} ${x.featured?'· Featured':''} ${x.active?'':'· Hidden'}</small></div><div class="actions"><button class="btn secondary" onclick='productForm(${arg(x)})'>Edit</button><button class="btn danger" onclick="del('products',${x.id})">Delete</button></div></div>`).join('')}</div>`}
-function productForm(x={}){form.innerHTML=`<div class="card"><h3>${x.id?'Edit':'New'} product</h3><div class="grid"><label>
-Product image
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<input
-    id="pfile"
-    type="file"
-    accept="image/jpeg,image/png,image/webp"
->
+    <title>Adore Hair Studio Admin</title>
 
-<input
-    id="pimg"
-    type="hidden"
-    value="${esc(x.imageUrl||'')}"
->
-
-<div id="imagePreview">
-    ${x.imageUrl
-        ? `<img src="${esc(x.imageUrl)}"
-               style="max-width:180px;margin-top:10px;border-radius:10px">`
-        : ''}
-</div>
-
-<button
-    type="button"
-    class="btn secondary"
-    onclick="uploadProductImage()"
-    style="margin-top:8px">
-    Upload Image
-</button>
-
-<span id="uploadStatus"></span>
-</label><label>Price<input id="pprice" type="number" step="0.01" value="${esc(x.price||'')}"></label><label>Old price<input id="pold" type="number" step="0.01" value="${esc(x.oldPrice||'')}"></label><label>Category<input id="pcat" value="${esc(x.category||'')}"></label><label>Tag<input id="ptag" value="${esc(x.tag||'')}"></label><label>Image URL / filename<input id="pimg" value="${esc(x.imageUrl||'')}"></label><label>Stars<input id="pstars" type="number" min="0" max="5" value="${x.stars??5}"></label><label>Display order<input id="porder" type="number" value="${x.displayOrder??0}"></label></div><br><label>Description<textarea id="pdesc">${esc(x.description||'')}</textarea></label><p><label><input id="pfeatured" type="checkbox" ${x.featured?'checked':''}> Featured</label> &nbsp; <label><input id="pactive" type="checkbox" ${x.active!==false?'checked':''}> Active</label></p><button class="btn primary" onclick="saveProduct(${x.id||'null'})">Save</button></div>`}
-async function saveProduct(id){const body={name:pname.value,price:Number(pprice.value),oldPrice:pold.value?Number(pold.value):null,category:pcat.value,tag:ptag.value,imageUrl:pimg.value,stars:Number(pstars.value),displayOrder:Number(porder.value),description:pdesc.value,featured:pfeatured.checked,active:pactive.checked};await api('/api/admin/products'+(id?'/'+id:''),{method:id?'PUT':'POST',body:JSON.stringify(body)});load()}
-function renderServices(xs){content.innerHTML=`<h2>Services</h2><button class="btn primary" onclick="serviceForm()">+ Add service</button><div id="form"></div>${xs.map(x=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>${esc(x.priceLabel||'')} ${x.active?'':'· Hidden'}</small></div><div class="actions"><button class="btn secondary" onclick='serviceForm(${arg(x)})'>Edit</button><button class="btn danger" onclick="del('services',${x.id})">Delete</button></div></div>`).join('')}`}
-function serviceForm(x={}){form.innerHTML=`<div class="card"><h3>${x.id?'Edit':'New'} service</h3><div class="grid"><label>Name<input id="sname" value="${esc(x.name||'')}"></label><label>Price label<input id="sprice" value="${esc(x.priceLabel||'')}"></label><label>Font Awesome icon class<input id="sicon" value="${esc(x.icon||'fa-scissors')}"></label><label>Display order<input id="sorder" type="number" value="${x.displayOrder??0}"></label></div><br><label>Description<textarea id="sdesc">${esc(x.description||'')}</textarea></label><p><label><input id="sactive" type="checkbox" ${x.active!==false?'checked':''}> Active</label></p><button class="btn primary" onclick="saveService(${x.id||'null'})">Save</button></div>`}
-async function saveService(id){const body={name:sname.value,priceLabel:sprice.value,icon:sicon.value,displayOrder:Number(sorder.value),description:sdesc.value,active:sactive.checked};await api('/api/admin/services'+(id?'/'+id:''),{method:id?'PUT':'POST',body:JSON.stringify(body)});load()}
-function renderTestimonials(xs){content.innerHTML=`<h2>Testimonials</h2><button class="btn primary" onclick="testimonialForm()">+ Add testimonial</button><div id="form"></div>${xs.map(x=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>${esc(x.title||'')} · ${x.stars} stars ${x.active?'':'· Hidden'}</small></div><div class="actions"><button class="btn secondary" onclick='testimonialForm(${arg(x)})'>Edit</button><button class="btn danger" onclick="del('testimonials',${x.id})">Delete</button></div></div>`).join('')}`}
-function testimonialForm(x={}){form.innerHTML=`<div class="card"><h3>${x.id?'Edit':'New'} testimonial</h3><div class="grid"><label>Name<input id="tname" value="${esc(x.name||'')}"></label><label>Title<input id="ttitle" value="${esc(x.title||'')}"></label><label>Stars<input id="tstars" type="number" min="1" max="5" value="${x.stars??5}"></label><label>Display order<input id="torder" type="number" value="${x.displayOrder??0}"></label></div><br><label>Testimonial<textarea id="ttext">${esc(x.text||'')}</textarea></label><p><label><input id="tactive" type="checkbox" ${x.active!==false?'checked':''}> Active</label></p><button class="btn primary" onclick="saveTestimonial(${x.id||'null'})">Save</button></div>`}
-async function saveTestimonial(id){const body={name:tname.value,title:ttitle.value,stars:Number(tstars.value),displayOrder:Number(torder.value),text:ttext.value,active:tactive.checked};await api('/api/admin/testimonials'+(id?'/'+id:''),{method:id?'PUT':'POST',body:JSON.stringify(body)});load()}
-function renderMessages(xs){content.innerHTML=`<h2>Contact Messages</h2>${xs.length?'': '<p>No messages yet.</p>'}${xs.map(x=>`<div class="row ${x.readMessage?'':'msg-unread'}"><div><b>${esc(x.name)}</b> — ${esc(x.email)}<br><small>${new Date(x.createdAt).toLocaleString()} · ${esc(x.service||'General')}</small><p>${esc(x.message)}</p></div><div class="actions">${x.readMessage?'':'<button class="btn secondary" onclick="markRead('+x.id+')">Mark read</button>'}<button class="btn danger" onclick="del('messages',${x.id})">Delete</button></div></div>`).join('')}`}
-async function markRead(id){await api('/api/admin/messages/'+id+'/read',{method:'PUT'});load()}
-function renderSettings(x){content.innerHTML=`<h2>Site Settings</h2><div class="grid"><label>Phone<input id="xphone" value="${esc(x.phone||'')}"></label><label>WhatsApp digits<input id="xwa" value="${esc(x.whatsapp||'')}"></label><label>Email<input id="xemail" value="${esc(x.email||'')}"></label><label>Instagram URL<input id="xig" value="${esc(x.instagram||'')}"></label><label>Address<input id="xaddress" value="${esc(x.address||'')}"></label><label>Hero eyebrow<input id="xeye" value="${esc(x.heroEyebrow||'')}"></label></div><br><label>Hero title<input id="xtitle" value="${esc(x.heroTitle||'')}"></label><br><br><label>Hero tagline<textarea id="xtag">${esc(x.heroTagline||'')}</textarea></label><br><button class="btn primary" onclick="saveSettings()">Save settings</button>`}
-async function saveSettings(){await api('/api/admin/settings',{method:'PUT',body:JSON.stringify({id:1,phone:xphone.value,whatsapp:xwa.value,email:xemail.value,instagram:xig.value,address:xaddress.value,heroEyebrow:xeye.value,heroTitle:xtitle.value,heroTagline:xtag.value})});alert('Saved');load()}
-async function del(type,id){if(!confirm('Delete this item?'))return;await api('/api/admin/'+type+'/'+id,{method:'DELETE'});load()}
-async function uploadProductImage() {
-
-    const file = document.getElementById('pfile').files[0];
-
-    if (!file) {
-        alert('Choose an image first.');
-        return;
-    }
-
-    const status = document.getElementById('uploadStatus');
-
-    status.textContent = ' Uploading...';
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-
-        const res = await fetch('/api/admin/images/upload', {
-            method: 'POST',
-            headers: {
-                Authorization: 'Bearer ' + token
-            },
-            body: formData
-        });
-
-        if (!res.ok) {
-            throw new Error(await res.text());
+    <style>
+        :root {
+            --g: #c9a84c;
+            --b: #0b0b0b;
+            --bg: #f6f3ed;
+            --card: #fff;
+            --muted: #777;
         }
 
-        const result = await res.json();
+        * {
+            box-sizing: border-box;
+        }
 
-        document.getElementById('pimg').value = result.url;
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: #181818;
+        }
 
-        document.getElementById('imagePreview').innerHTML =
-            `<img src="${result.url}"
-                  style="max-width:180px;margin-top:10px;border-radius:10px">`;
+        header {
+            background: var(--b);
+            color: #fff;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        status.textContent = ' Uploaded successfully';
+        header strong {
+            color: var(--g);
+        }
 
-    } catch (e) {
+        main {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 18px;
+        }
 
-        console.error(e);
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 6px 24px #0000000d;
+            margin-bottom: 20px;
+        }
 
-        status.textContent = ' Upload failed';
+        .hidden {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .tabs button,
+        .btn {
+            border: 0;
+            border-radius: 9px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .tabs button.active,
+        .btn.primary {
+            background: var(--b);
+            color: var(--g);
+        }
+
+        .btn.danger {
+            background: #a72626;
+            color: #fff;
+        }
+
+        .btn.secondary {
+            background: #ece7db;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #555;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+        }
+
+        textarea {
+            min-height: 90px;
+        }
+
+        .row {
+            border-top: 1px solid #eee;
+            padding: 14px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .row:first-child {
+            border-top: 0;
+        }
+
+        .row small {
+            color: var(--muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .login {
+            max-width: 420px;
+            margin: 80px auto;
+        }
+
+        .notice {
+            padding: 10px;
+            border-radius: 8px;
+            background: #fff2c7;
+            margin-bottom: 12px;
+        }
+
+        .msg-unread {
+            font-weight: 700;
+        }
+
+        .image-preview img {
+            max-width: 180px;
+            max-height: 180px;
+            object-fit: cover;
+            margin-top: 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .upload-status {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <strong>ADORE</strong> Hair Studio Admin
+    </div>
+
+    <button
+        class="btn secondary"
+        id="logoutBtn"
+        onclick="logout()">
+        Logout
+    </button>
+</header>
+
+<main>
+
+    <!-- LOGIN -->
+    <section id="loginView" class="card login">
+
+        <h2>Admin Login</h2>
+
+        <div class="notice">
+            Use the ADMIN_EMAIL and ADMIN_PASSWORD configured on the backend.
+        </div>
+
+        <label>
+            Email
+            <input id="loginEmail" type="email">
+        </label>
+
+        <br><br>
+
+        <label>
+            Password
+            <input id="loginPassword" type="password">
+        </label>
+
+        <br><br>
+
+        <button
+            class="btn primary"
+            onclick="login()">
+            Sign in
+        </button>
+
+        <p id="loginErr"></p>
+
+    </section>
+
+
+    <!-- ADMIN APPLICATION -->
+    <section id="appView" class="hidden">
+
+        <div class="tabs">
+
+            <button
+                data-tab="products"
+                class="active">
+                Products
+            </button>
+
+            <button data-tab="services">
+                Services
+            </button>
+
+            <button data-tab="testimonials">
+                Testimonials
+            </button>
+
+            <button data-tab="messages">
+                Messages
+            </button>
+
+            <button data-tab="settings">
+                Site Settings
+            </button>
+
+        </div>
+
+        <div id="content" class="card"></div>
+
+    </section>
+
+</main>
+
+
+<script>
+
+    /* =========================================================
+       AUTHENTICATION / API
+    ========================================================= */
+
+    let token =
+        localStorage.getItem('adore_admin_token') || '';
+
+    let tab = 'products';
+
+
+    const api = (path, opt = {}) =>
+        fetch(path, {
+            ...opt,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(opt.headers || {}),
+                ...(token
+                    ? {Authorization: 'Bearer ' + token}
+                    : {})
+            }
+        })
+            .then(async r => {
+
+                if (r.status === 401) {
+                    logout();
+                    throw Error('Session expired');
+                }
+
+                if (!r.ok) {
+                    throw Error(
+                        (await r.text()) || 'Request failed'
+                    );
+                }
+
+                return r.status === 204
+                    ? null
+                    : r.json();
+            });
+
+
+    function showApp() {
+
+        document
+            .getElementById('loginView')
+            .classList.add('hidden');
+
+        document
+            .getElementById('appView')
+            .classList.remove('hidden');
+
+        document.getElementById(
+            'logoutBtn'
+        ).style.visibility = 'visible';
+
+        load();
     }
-}
-if(token)showApp();else showLogin();
-</script></body></html>
+
+
+    function showLogin() {
+
+        document
+            .getElementById('loginView')
+            .classList.remove('hidden');
+
+        document
+            .getElementById('appView')
+            .classList.add('hidden');
+
+        document.getElementById(
+            'logoutBtn'
+        ).style.visibility = 'hidden';
+    }
+
+
+    async function login() {
+
+        const loginErr =
+            document.getElementById('loginErr');
+
+        loginErr.textContent = '';
+
+        try {
+
+            const email =
+                document.getElementById('loginEmail').value;
+
+            const password =
+                document.getElementById('loginPassword').value;
+
+            const r = await api(
+                '/api/auth/login',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                }
+            );
+
+            token = r.token;
+
+            localStorage.setItem(
+                'adore_admin_token',
+                token
+            );
+
+            showApp();
+
+        } catch (e) {
+
+            loginErr.textContent = e.message;
+        }
+    }
+
+
+    function logout() {
+
+        token = '';
+
+        localStorage.removeItem(
+            'adore_admin_token'
+        );
+
+        showLogin();
+    }
+
+
+    /* =========================================================
+       TABS
+    ========================================================= */
+
+    document
+        .querySelectorAll('.tabs button')
+        .forEach(button => {
+
+            button.onclick = () => {
+
+                document
+                    .querySelectorAll('.tabs button')
+                    .forEach(x =>
+                        x.classList.remove('active')
+                    );
+
+                button.classList.add('active');
+
+                tab = button.dataset.tab;
+
+                load();
+            };
+        });
+
+
+    /* =========================================================
+       HELPERS
+    ========================================================= */
+
+    const esc = s =>
+        String(s ?? '')
+            .replace(
+                /[&<>"]/g,
+                c => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;'
+                }[c])
+            );
+
+
+    const arg = x =>
+        JSON.stringify(x)
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e');
+
+
+    /* =========================================================
+       LOAD CURRENT TAB
+    ========================================================= */
+
+    async function load() {
+
+        const content =
+            document.getElementById('content');
+
+        content.innerHTML = 'Loading…';
+
+        try {
+
+            if (tab === 'products') {
+                renderProducts(
+                    await api('/api/admin/products')
+                );
+            }
+
+            if (tab === 'services') {
+                renderServices(
+                    await api('/api/admin/services')
+                );
+            }
+
+            if (tab === 'testimonials') {
+                renderTestimonials(
+                    await api('/api/admin/testimonials')
+                );
+            }
+
+            if (tab === 'messages') {
+                renderMessages(
+                    await api('/api/admin/messages')
+                );
+            }
+
+            if (tab === 'settings') {
+                renderSettings(
+                    await api('/api/admin/settings')
+                );
+            }
+
+        } catch (e) {
+
+            content.innerHTML =
+                '<p>' + esc(e.message) + '</p>';
+        }
+    }
+
+
+    /* =========================================================
+       PRODUCTS
+    ========================================================= */
+
+    function renderProducts(xs) {
+
+        const content =
+            document.getElementById('content');
+
+        content.innerHTML = `
+
+            <h2>Products</h2>
+
+            <p>
+                Add and manage wigs. Product photos can now
+                be uploaded directly to Cloudinary.
+            </p>
+
+            <button
+                class="btn primary"
+                onclick="productForm()">
+                + Add product
+            </button>
+
+            <div id="form"></div>
+
+            <div>
+
+                ${xs.map(x => `
+
+                    <div class="row">
+
+                        <div>
+
+                            <b>${esc(x.name)}</b>
+
+                            <br>
+
+                            <small>
+
+                                GH₵ ${esc(x.price)}
+
+                                · ${esc(x.category || '')}
+
+                                ${x.featured
+                                    ? ' · Featured'
+                                    : ''}
+
+                                ${x.active
+                                    ? ''
+                                    : ' · Hidden'}
+
+                            </small>
+
+                        </div>
+
+                        <div class="actions">
+
+                            <button
+                                class="btn secondary"
+                                onclick='productForm(${arg(x)})'>
+                                Edit
+                            </button>
+
+                            <button
+                                class="btn danger"
+                                onclick="del('products', ${x.id})">
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                `).join('')}
+
+            </div>
+        `;
+    }
+
+
+    function productForm(x = {}) {
+
+        const form =
+            document.getElementById('form');
+
+        form.innerHTML = `
+
+            <div class="card">
+
+                <h3>
+                    ${x.id ? 'Edit' : 'New'} product
+                </h3>
+
+                <div class="grid">
+
+                    <label>
+
+                        Name
+
+                        <input
+                            id="pname"
+                            value="${esc(x.name || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Price
+
+                        <input
+                            id="pprice"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value="${esc(x.price || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Old price
+
+                        <input
+                            id="pold"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value="${esc(x.oldPrice || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Category
+
+                        <select id="pcat">
+
+                            <option
+                                value=""
+                                ${!x.category ? 'selected' : ''}>
+                                Select category
+                            </option>
+
+                            <option
+                                value="lace"
+                                ${x.category === 'lace'
+                                    ? 'selected'
+                                    : ''}>
+                                Lace Front
+                            </option>
+
+                            <option
+                                value="body-wave"
+                                ${x.category === 'body-wave'
+                                    ? 'selected'
+                                    : ''}>
+                                Body Wave
+                            </option>
+
+                            <option
+                                value="curly"
+                                ${x.category === 'curly'
+                                    ? 'selected'
+                                    : ''}>
+                                Curly
+                            </option>
+
+                            <option
+                                value="colored"
+                                ${x.category === 'colored'
+                                    ? 'selected'
+                                    : ''}>
+                                Colored
+                            </option>
+
+                            <option
+                                value="closure"
+                                ${x.category === 'closure'
+                                    ? 'selected'
+                                    : ''}>
+                                Closure
+                            </option>
+
+                        </select>
+
+                    </label>
+
+
+                    <label>
+
+                        Tag
+
+                        <input
+                            id="ptag"
+                            placeholder="e.g. Best Seller"
+                            value="${esc(x.tag || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Stars
+
+                        <input
+                            id="pstars"
+                            type="number"
+                            min="0"
+                            max="5"
+                            value="${x.stars ?? 5}">
+
+                    </label>
+
+
+                    <label>
+
+                        Display order
+
+                        <input
+                            id="porder"
+                            type="number"
+                            value="${x.displayOrder ?? 0}">
+
+                    </label>
+
+                </div>
+
+
+                <br>
+
+
+                <label>
+
+                    Product Image
+
+                    <input
+                        id="pfile"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp">
+
+                </label>
+
+
+                <input
+                    id="pimg"
+                    type="hidden"
+                    value="${esc(x.imageUrl || '')}">
+
+
+                <div
+                    id="imagePreview"
+                    class="image-preview">
+
+                    ${
+                        x.imageUrl
+                            ? `
+                                <img
+                                    src="${esc(x.imageUrl)}"
+                                    alt="Product image">
+                              `
+                            : ''
+                    }
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="btn secondary"
+                    onclick="uploadProductImage()"
+                    style="margin-top:10px">
+
+                    Upload Image
+
+                </button>
+
+
+                <span
+                    id="uploadStatus"
+                    class="upload-status">
+                </span>
+
+
+                <br><br>
+
+
+                <label>
+
+                    Description
+
+                    <textarea
+                        id="pdesc"
+                        placeholder="Describe the wig...">${esc(x.description || '')}</textarea>
+
+                </label>
+
+
+                <p>
+
+                    <label>
+
+                        <input
+                            id="pfeatured"
+                            type="checkbox"
+                            ${x.featured
+                                ? 'checked'
+                                : ''}>
+
+                        Featured
+
+                    </label>
+
+
+                    &nbsp;&nbsp;
+
+
+                    <label>
+
+                        <input
+                            id="pactive"
+                            type="checkbox"
+                            ${x.active !== false
+                                ? 'checked'
+                                : ''}>
+
+                        Active
+
+                    </label>
+
+                </p>
+
+
+                <button
+                    class="btn primary"
+                    onclick="saveProduct(${x.id || 'null'})">
+
+                    Save Product
+
+                </button>
+
+            </div>
+        `;
+    }
+
+
+    async function uploadProductImage() {
+
+        const input =
+            document.getElementById('pfile');
+
+        const file =
+            input.files[0];
+
+        const status =
+            document.getElementById(
+                'uploadStatus'
+            );
+
+
+        if (!file) {
+
+            alert('Choose an image first.');
+
+            return;
+        }
+
+
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+
+        if (!allowedTypes.includes(file.type)) {
+
+            alert(
+                'Only JPG, PNG and WEBP images are allowed.'
+            );
+
+            return;
+        }
+
+
+        const maxSize =
+            10 * 1024 * 1024;
+
+
+        if (file.size > maxSize) {
+
+            alert(
+                'Image is too large. Maximum size is 10MB.'
+            );
+
+            return;
+        }
+
+
+        status.textContent =
+            'Uploading...';
+
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            'file',
+            file
+        );
+
+
+        try {
+
+            const res =
+                await fetch(
+                    '/api/admin/images/upload',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            Authorization:
+                                'Bearer ' + token
+                        },
+
+                        body: formData
+                    }
+                );
+
+
+            if (res.status === 401) {
+
+                logout();
+
+                throw new Error(
+                    'Session expired'
+                );
+            }
+
+
+            if (!res.ok) {
+
+                throw new Error(
+                    await res.text()
+                );
+            }
+
+
+            const result =
+                await res.json();
+
+
+            if (!result.url) {
+
+                throw new Error(
+                    'Upload completed but no image URL was returned.'
+                );
+            }
+
+
+            document
+                .getElementById('pimg')
+                .value =
+                result.url;
+
+
+            document
+                .getElementById(
+                    'imagePreview'
+                )
+                .innerHTML = `
+
+                    <img
+                        src="${esc(result.url)}"
+                        alt="Uploaded product image">
+
+                `;
+
+
+            status.textContent =
+                '✓ Uploaded successfully';
+
+
+        } catch (e) {
+
+            console.error(
+                'Image upload failed:',
+                e
+            );
+
+
+            status.textContent =
+                'Upload failed';
+
+
+            alert(
+                'Image upload failed. Check the browser console or server logs.'
+            );
+        }
+    }
+
+
+    async function saveProduct(id) {
+
+        const name =
+            document.getElementById('pname')
+                .value
+                .trim();
+
+        const price =
+            document.getElementById('pprice')
+                .value;
+
+        const imageUrl =
+            document.getElementById('pimg')
+                .value;
+
+
+        if (!name) {
+
+            alert(
+                'Please enter the product name.'
+            );
+
+            return;
+        }
+
+
+        if (
+            !price ||
+            Number(price) <= 0
+        ) {
+
+            alert(
+                'Please enter a valid product price.'
+            );
+
+            return;
+        }
+
+
+        if (!imageUrl) {
+
+            alert(
+                'Please upload a product image before saving.'
+            );
+
+            return;
+        }
+
+
+        const body = {
+
+            name,
+
+            price:
+                Number(price),
+
+            oldPrice:
+                document
+                    .getElementById('pold')
+                    .value
+
+                    ? Number(
+                        document
+                            .getElementById('pold')
+                            .value
+                      )
+
+                    : null,
+
+            category:
+                document
+                    .getElementById('pcat')
+                    .value,
+
+            tag:
+                document
+                    .getElementById('ptag')
+                    .value
+                    .trim(),
+
+            imageUrl,
+
+            stars:
+                Number(
+                    document
+                        .getElementById('pstars')
+                        .value
+                ),
+
+            displayOrder:
+                Number(
+                    document
+                        .getElementById('porder')
+                        .value
+                ),
+
+            description:
+                document
+                    .getElementById('pdesc')
+                    .value
+                    .trim(),
+
+            featured:
+                document
+                    .getElementById('pfeatured')
+                    .checked,
+
+            active:
+                document
+                    .getElementById('pactive')
+                    .checked
+        };
+
+
+        try {
+
+            await api(
+
+                '/api/admin/products'
+                + (id
+                    ? '/' + id
+                    : ''),
+
+                {
+
+                    method:
+                        id
+                            ? 'PUT'
+                            : 'POST',
+
+                    body:
+                        JSON.stringify(body)
+
+                }
+            );
+
+
+            alert(
+                id
+                    ? 'Product updated successfully.'
+                    : 'Product added successfully.'
+            );
+
+
+            load();
+
+
+        } catch (e) {
+
+            alert(
+                'Could not save product: '
+                + e.message
+            );
+        }
+    }
+
+
+    /* =========================================================
+       SERVICES
+    ========================================================= */
+
+    function renderServices(xs) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+
+        content.innerHTML = `
+
+            <h2>Services</h2>
+
+            <button
+                class="btn primary"
+                onclick="serviceForm()">
+
+                + Add service
+
+            </button>
+
+            <div id="form"></div>
+
+
+            ${xs.map(x => `
+
+                <div class="row">
+
+                    <div>
+
+                        <b>
+                            ${esc(x.name)}
+                        </b>
+
+                        <br>
+
+                        <small>
+
+                            ${esc(
+                                x.priceLabel || ''
+                            )}
+
+                            ${x.active
+                                ? ''
+                                : ' · Hidden'}
+
+                        </small>
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        <button
+                            class="btn secondary"
+                            onclick='serviceForm(${arg(x)})'>
+
+                            Edit
+
+                        </button>
+
+
+                        <button
+                            class="btn danger"
+                            onclick="del('services', ${x.id})">
+
+                            Delete
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `).join('')}
+
+        `;
+    }
+
+
+    function serviceForm(x = {}) {
+
+        const form =
+            document.getElementById(
+                'form'
+            );
+
+
+        form.innerHTML = `
+
+            <div class="card">
+
+                <h3>
+                    ${x.id
+                        ? 'Edit'
+                        : 'New'} service
+                </h3>
+
+
+                <div class="grid">
+
+                    <label>
+
+                        Name
+
+                        <input
+                            id="sname"
+                            value="${esc(
+                                x.name || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Price label
+
+                        <input
+                            id="sprice"
+                            placeholder="e.g. From GH₵ 200"
+                            value="${esc(
+                                x.priceLabel || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Font Awesome icon class
+
+                        <input
+                            id="sicon"
+                            value="${esc(
+                                x.icon ||
+                                'fa-scissors'
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Display order
+
+                        <input
+                            id="sorder"
+                            type="number"
+                            value="${
+                                x.displayOrder ?? 0
+                            }">
+
+                    </label>
+
+                </div>
+
+
+                <br>
+
+
+                <label>
+
+                    Description
+
+                    <textarea
+                        id="sdesc">${esc(
+                            x.description || ''
+                        )}</textarea>
+
+                </label>
+
+
+                <p>
+
+                    <label>
+
+                        <input
+                            id="sactive"
+                            type="checkbox"
+                            ${x.active !== false
+                                ? 'checked'
+                                : ''}>
+
+                        Active
+
+                    </label>
+
+                </p>
+
+
+                <button
+                    class="btn primary"
+                    onclick="saveService(${x.id || 'null'})">
+
+                    Save
+
+                </button>
+
+            </div>
+
+        `;
+    }
+
+
+    async function saveService(id) {
+
+        const body = {
+
+            name:
+                document
+                    .getElementById('sname')
+                    .value,
+
+            priceLabel:
+                document
+                    .getElementById('sprice')
+                    .value,
+
+            icon:
+                document
+                    .getElementById('sicon')
+                    .value,
+
+            displayOrder:
+                Number(
+                    document
+                        .getElementById('sorder')
+                        .value
+                ),
+
+            description:
+                document
+                    .getElementById('sdesc')
+                    .value,
+
+            active:
+                document
+                    .getElementById('sactive')
+                    .checked
+        };
+
+
+        await api(
+
+            '/api/admin/services'
+            + (id
+                ? '/' + id
+                : ''),
+
+            {
+                method:
+                    id
+                        ? 'PUT'
+                        : 'POST',
+
+                body:
+                    JSON.stringify(body)
+            }
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       TESTIMONIALS
+    ========================================================= */
+
+    function renderTestimonials(xs) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+
+        content.innerHTML = `
+
+            <h2>Testimonials</h2>
+
+            <button
+                class="btn primary"
+                onclick="testimonialForm()">
+
+                + Add testimonial
+
+            </button>
+
+            <div id="form"></div>
+
+
+            ${xs.map(x => `
+
+                <div class="row">
+
+                    <div>
+
+                        <b>
+                            ${esc(x.name)}
+                        </b>
+
+                        <br>
+
+                        <small>
+
+                            ${esc(
+                                x.title || ''
+                            )}
+
+                            · ${x.stars} stars
+
+                            ${x.active
+                                ? ''
+                                : ' · Hidden'}
+
+                        </small>
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        <button
+                            class="btn secondary"
+                            onclick='testimonialForm(${arg(x)})'>
+
+                            Edit
+
+                        </button>
+
+
+                        <button
+                            class="btn danger"
+                            onclick="del('testimonials', ${x.id})">
+
+                            Delete
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `).join('')}
+
+        `;
+    }
+
+
+    function testimonialForm(x = {}) {
+
+        const form =
+            document.getElementById(
+                'form'
+            );
+
+
+        form.innerHTML = `
+
+            <div class="card">
+
+                <h3>
+                    ${x.id
+                        ? 'Edit'
+                        : 'New'} testimonial
+                </h3>
+
+
+                <div class="grid">
+
+                    <label>
+
+                        Name
+
+                        <input
+                            id="tname"
+                            value="${esc(
+                                x.name || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Title
+
+                        <input
+                            id="ttitle"
+                            value="${esc(
+                                x.title || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Stars
+
+                        <input
+                            id="tstars"
+                            type="number"
+                            min="1"
+                            max="5"
+                            value="${
+                                x.stars ?? 5
+                            }">
+
+                    </label>
+
+
+                    <label>
+
+                        Display order
+
+                        <input
+                            id="torder"
+                            type="number"
+                            value="${
+                                x.displayOrder ?? 0
+                            }">
+
+                    </label>
+
+                </div>
+
+
+                <br>
+
+
+                <label>
+
+                    Testimonial
+
+                    <textarea
+                        id="ttext">${esc(
+                            x.text || ''
+                        )}</textarea>
+
+                </label>
+
+
+                <p>
+
+                    <label>
+
+                        <input
+                            id="tactive"
+                            type="checkbox"
+                            ${x.active !== false
+                                ? 'checked'
+                                : ''}>
+
+                        Active
+
+                    </label>
+
+                </p>
+
+
+                <button
+                    class="btn primary"
+                    onclick="saveTestimonial(${x.id || 'null'})">
+
+                    Save
+
+                </button>
+
+            </div>
+
+        `;
+    }
+
+
+    async function saveTestimonial(id) {
+
+        const body = {
+
+            name:
+                document
+                    .getElementById('tname')
+                    .value,
+
+            title:
+                document
+                    .getElementById('ttitle')
+                    .value,
+
+            stars:
+                Number(
+                    document
+                        .getElementById('tstars')
+                        .value
+                ),
+
+            displayOrder:
+                Number(
+                    document
+                        .getElementById('torder')
+                        .value
+                ),
+
+            text:
+                document
+                    .getElementById('ttext')
+                    .value,
+
+            active:
+                document
+                    .getElementById('tactive')
+                    .checked
+        };
+
+
+        await api(
+
+            '/api/admin/testimonials'
+            + (id
+                ? '/' + id
+                : ''),
+
+            {
+                method:
+                    id
+                        ? 'PUT'
+                        : 'POST',
+
+                body:
+                    JSON.stringify(body)
+            }
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       CONTACT MESSAGES
+    ========================================================= */
+
+    function renderMessages(xs) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+
+        content.innerHTML = `
+
+            <h2>
+                Contact Messages
+            </h2>
+
+
+            ${
+                xs.length
+                    ? ''
+                    : '<p>No messages yet.</p>'
+            }
+
+
+            ${xs.map(x => `
+
+                <div
+                    class="row ${
+                        x.readMessage
+                            ? ''
+                            : 'msg-unread'
+                    }">
+
+                    <div>
+
+                        <b>
+                            ${esc(x.name)}
+                        </b>
+
+                        —
+                        ${esc(x.email)}
+
+                        <br>
+
+                        <small>
+
+                            ${
+                                new Date(
+                                    x.createdAt
+                                )
+                                    .toLocaleString()
+                            }
+
+                            · ${esc(
+                                x.service ||
+                                'General'
+                            )}
+
+                        </small>
+
+                        <p>
+                            ${esc(x.message)}
+                        </p>
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        ${
+                            x.readMessage
+                                ? ''
+                                : `
+                                    <button
+                                        class="btn secondary"
+                                        onclick="markRead(${x.id})">
+
+                                        Mark read
+
+                                    </button>
+                                  `
+                        }
+
+
+                        <button
+                            class="btn danger"
+                            onclick="del('messages', ${x.id})">
+
+                            Delete
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `).join('')}
+
+        `;
+    }
+
+
+    async function markRead(id) {
+
+        await api(
+
+            '/api/admin/messages/'
+            + id
+            + '/read',
+
+            {
+                method: 'PUT'
+            }
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       SITE SETTINGS
+    ========================================================= */
+
+    function renderSettings(x) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+
+        content.innerHTML = `
+
+            <h2>
+                Site Settings
+            </h2>
+
+
+            <div class="grid">
+
+                <label>
+
+                    Phone
+
+                    <input
+                        id="xphone"
+                        value="${esc(
+                            x.phone || ''
+                        )}">
+
+                </label>
+
+
+                <label>
+
+                    WhatsApp digits
+
+                    <input
+                        id="xwa"
+                        value="${esc(
+                            x.whatsapp || ''
+                        )}">
+
+                </label>
+
+
+                <label>
+
+                    Email
+
+                    <input
+                        id="xemail"
+                        value="${esc(
+                            x.email || ''
+                        )}">
+
+                </label>
+
+
+                <label>
+
+                    Instagram URL
+
+                    <input
+                        id="xig"
+                        value="${esc(
+                            x.instagram || ''
+                        )}">
+
+                </label>
+
+
+                <label>
+
+                    Address
+
+                    <input
+                        id="xaddress"
+                        value="${esc(
+                            x.address || ''
+                        )}">
+
+                </label>
+
+
+                <label>
+
+                    Hero eyebrow
+
+                    <input
+                        id="xeye"
+                        value="${esc(
+                            x.heroEyebrow || ''
+                        )}">
+
+                </label>
+
+            </div>
+
+
+            <br>
+
+
+            <label>
+
+                Hero title
+
+                <input
+                    id="xtitle"
+                    value="${esc(
+                        x.heroTitle || ''
+                    )}">
+
+            </label>
+
+
+            <br><br>
+
+
+            <label>
+
+                Hero tagline
+
+                <textarea
+                    id="xtag">${esc(
+                        x.heroTagline || ''
+                    )}</textarea>
+
+            </label>
+
+
+            <br>
+
+
+            <button
+                class="btn primary"
+                onclick="saveSettings()">
+
+                Save settings
+
+            </button>
+
+        `;
+    }
+
+
+    async function saveSettings() {
+
+        const body = {
+
+            id: 1,
+
+            phone:
+                document
+                    .getElementById('xphone')
+                    .value,
+
+            whatsapp:
+                document
+                    .getElementById('xwa')
+                    .value,
+
+            email:
+                document
+                    .getElementById('xemail')
+                    .value,
+
+            instagram:
+                document
+                    .getElementById('xig')
+                    .value,
+
+            address:
+                document
+                    .getElementById('xaddress')
+                    .value,
+
+            heroEyebrow:
+                document
+                    .getElementById('xeye')
+                    .value,
+
+            heroTitle:
+                document
+                    .getElementById('xtitle')
+                    .value,
+
+            heroTagline:
+                document
+                    .getElementById('xtag')
+                    .value
+        };
+
+
+        await api(
+
+            '/api/admin/settings',
+
+            {
+                method: 'PUT',
+                body:
+                    JSON.stringify(body)
+            }
+        );
+
+
+        alert(
+            'Settings saved successfully.'
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       DELETE
+    ========================================================= */
+
+    async function del(type, id) {
+
+        if (
+            !confirm(
+                'Delete this item?'
+            )
+        ) {
+            return;
+        }
+
+
+        try {
+
+            await api(
+
+                '/api/admin/'
+                + type
+                + '/'
+                + id,
+
+                {
+                    method: 'DELETE'
+                }
+            );
+
+
+            load();
+
+
+        } catch (e) {
+
+            alert(
+                'Could not delete item: '
+                + e.message
+            );
+        }
+    }
+
+
+    /* =========================================================
+       START
+    ========================================================= */
+
+    if (token) {
+        showApp();
+    } else {
+        showLogin();
+    }
+
+</script>
+
+</body>
+</html>
