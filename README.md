@@ -38,11 +38,6 @@ The backend defaults to a local H2 file database. Open:
 - API: `http://localhost:8080/api/public/products`
 - Admin: `http://localhost:8080/admin.html`
 
-Development admin defaults:
-
-- Email: `admin@adore.local`
-- Password: `ChangeMe123!`
-
 Change these for deployment.
 
 Serve the `frontend/` folder with a local static server on port 5500. `frontend/config.js` already points to `http://localhost:8080`.
