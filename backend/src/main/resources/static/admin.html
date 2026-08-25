@@ -19,7 +19,38 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
     .replace(/>/g, '\\u003e');
 async function load(){content.innerHTML='Loading…';try{if(tab==='products')renderProducts(await api('/api/admin/products'));if(tab==='services')renderServices(await api('/api/admin/services'));if(tab==='testimonials')renderTestimonials(await api('/api/admin/testimonials'));if(tab==='messages')renderMessages(await api('/api/admin/messages'));if(tab==='settings')renderSettings(await api('/api/admin/settings'))}catch(e){content.innerHTML='<p>'+esc(e.message)+'</p>'}}
 function renderProducts(xs){content.innerHTML=`<h2>Products</h2><p>Add/edit products. For images, use an existing frontend filename such as <b>wig2.jpg</b> or a public Cloudinary image URL.</p><button class="btn primary" onclick="productForm()">+ Add product</button><div id="form"></div><div>${xs.map(x=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>GH₵ ${esc(x.price)} · ${esc(x.category||'')} ${x.featured?'· Featured':''} ${x.active?'':'· Hidden'}</small></div><div class="actions"><button class="btn secondary" onclick='productForm(${arg(x)})'>Edit</button><button class="btn danger" onclick="del('products',${x.id})">Delete</button></div></div>`).join('')}</div>`}
-function productForm(x={}){form.innerHTML=`<div class="card"><h3>${x.id?'Edit':'New'} product</h3><div class="grid"><label>Name<input id="pname" value="${esc(x.name||'')}"></label><label>Price<input id="pprice" type="number" step="0.01" value="${esc(x.price||'')}"></label><label>Old price<input id="pold" type="number" step="0.01" value="${esc(x.oldPrice||'')}"></label><label>Category<input id="pcat" value="${esc(x.category||'')}"></label><label>Tag<input id="ptag" value="${esc(x.tag||'')}"></label><label>Image URL / filename<input id="pimg" value="${esc(x.imageUrl||'')}"></label><label>Stars<input id="pstars" type="number" min="0" max="5" value="${x.stars??5}"></label><label>Display order<input id="porder" type="number" value="${x.displayOrder??0}"></label></div><br><label>Description<textarea id="pdesc">${esc(x.description||'')}</textarea></label><p><label><input id="pfeatured" type="checkbox" ${x.featured?'checked':''}> Featured</label> &nbsp; <label><input id="pactive" type="checkbox" ${x.active!==false?'checked':''}> Active</label></p><button class="btn primary" onclick="saveProduct(${x.id||'null'})">Save</button></div>`}
+function productForm(x={}){form.innerHTML=`<div class="card"><h3>${x.id?'Edit':'New'} product</h3><div class="grid"><label>
+Product image
+
+<input
+    id="pfile"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+>
+
+<input
+    id="pimg"
+    type="hidden"
+    value="${esc(x.imageUrl||'')}"
+>
+
+<div id="imagePreview">
+    ${x.imageUrl
+        ? `<img src="${esc(x.imageUrl)}"
+               style="max-width:180px;margin-top:10px;border-radius:10px">`
+        : ''}
+</div>
+
+<button
+    type="button"
+    class="btn secondary"
+    onclick="uploadProductImage()"
+    style="margin-top:8px">
+    Upload Image
+</button>
+
+<span id="uploadStatus"></span>
+</label><label>Price<input id="pprice" type="number" step="0.01" value="${esc(x.price||'')}"></label><label>Old price<input id="pold" type="number" step="0.01" value="${esc(x.oldPrice||'')}"></label><label>Category<input id="pcat" value="${esc(x.category||'')}"></label><label>Tag<input id="ptag" value="${esc(x.tag||'')}"></label><label>Image URL / filename<input id="pimg" value="${esc(x.imageUrl||'')}"></label><label>Stars<input id="pstars" type="number" min="0" max="5" value="${x.stars??5}"></label><label>Display order<input id="porder" type="number" value="${x.displayOrder??0}"></label></div><br><label>Description<textarea id="pdesc">${esc(x.description||'')}</textarea></label><p><label><input id="pfeatured" type="checkbox" ${x.featured?'checked':''}> Featured</label> &nbsp; <label><input id="pactive" type="checkbox" ${x.active!==false?'checked':''}> Active</label></p><button class="btn primary" onclick="saveProduct(${x.id||'null'})">Save</button></div>`}
 async function saveProduct(id){const body={name:pname.value,price:Number(pprice.value),oldPrice:pold.value?Number(pold.value):null,category:pcat.value,tag:ptag.value,imageUrl:pimg.value,stars:Number(pstars.value),displayOrder:Number(porder.value),description:pdesc.value,featured:pfeatured.checked,active:pactive.checked};await api('/api/admin/products'+(id?'/'+id:''),{method:id?'PUT':'POST',body:JSON.stringify(body)});load()}
 function renderServices(xs){content.innerHTML=`<h2>Services</h2><button class="btn primary" onclick="serviceForm()">+ Add service</button><div id="form"></div>${xs.map(x=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>${esc(x.priceLabel||'')} ${x.active?'':'· Hidden'}</small></div><div class="actions"><button class="btn secondary" onclick='serviceForm(${arg(x)})'>Edit</button><button class="btn danger" onclick="del('services',${x.id})">Delete</button></div></div>`).join('')}`}
 function serviceForm(x={}){form.innerHTML=`<div class="card"><h3>${x.id?'Edit':'New'} service</h3><div class="grid"><label>Name<input id="sname" value="${esc(x.name||'')}"></label><label>Price label<input id="sprice" value="${esc(x.priceLabel||'')}"></label><label>Font Awesome icon class<input id="sicon" value="${esc(x.icon||'fa-scissors')}"></label><label>Display order<input id="sorder" type="number" value="${x.displayOrder??0}"></label></div><br><label>Description<textarea id="sdesc">${esc(x.description||'')}</textarea></label><p><label><input id="sactive" type="checkbox" ${x.active!==false?'checked':''}> Active</label></p><button class="btn primary" onclick="saveService(${x.id||'null'})">Save</button></div>`}
