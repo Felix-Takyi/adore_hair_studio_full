@@ -1,0 +1,3075 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>Adore Hair Studio Admin</title>
+
+    <link rel="icon" type="image/png" href="/AHSicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root {
+            --black: #080808;
+            --deep: #111111;
+            --rich: #1a1a1a;
+            --gold: #c9a84c;
+            --gold-lt: #e2c06a;
+            --white: #ffffff;
+            --cream: #fdf8f1;
+            --blush: #faf0f4;
+            --pink: #f0c8d8;
+            --pink-md: #d48aaa;
+            --gray: #888888;
+            --muted: #8a8580;
+            --line: #ece6da;
+            --danger: #b3312c;
+            --danger-lt: #fbeceb;
+            --ok: #2f7a4d;
+            --ok-lt: #eaf6ee;
+            --serif: 'Playfair Display', serif;
+            --sans: 'Poppins', sans-serif;
+            --ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--sans);
+            background:
+                radial-gradient(1200px 500px at 10% -10%, #fbf1de 0%, transparent 60%),
+                radial-gradient(900px 500px at 110% 10%, var(--blush) 0%, transparent 55%),
+                var(--cream);
+            color: var(--rich);
+            min-height: 100vh;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--serif);
+            margin: 0 0 4px;
+            color: var(--black);
+        }
+
+        /* ---------- HEADER ---------- */
+
+        header {
+            background: linear-gradient(120deg, var(--black) 0%, var(--deep) 55%, #221a12 100%);
+            color: #fff;
+            padding: 16px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            box-shadow: 0 8px 24px rgba(0,0,0,.18);
+            border-bottom: 1px solid rgba(201,168,76,.35);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--gold-lt), var(--gold) 60%, #9c7f34);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--black);
+            font-family: var(--serif);
+            font-weight: 900;
+            font-size: 18px;
+            box-shadow: 0 4px 14px rgba(201,168,76,.45), inset 0 1px 2px rgba(255,255,255,.5);
+            flex: none;
+        }
+
+        .brand-text {
+            line-height: 1.15;
+        }
+
+        .brand-text strong {
+            font-family: var(--serif);
+            font-size: 19px;
+            letter-spacing: .5px;
+            color: var(--gold-lt);
+            display: block;
+        }
+
+        .brand-text span {
+            font-size: 11px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: #cfcfcf;
+        }
+
+        main {
+            max-width: 1220px;
+            margin: 0 auto;
+            padding: 26px 20px 60px;
+        }
+
+        /* ---------- GENERIC CARD ---------- */
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(20,15,5,.06);
+            border: 1px solid var(--line);
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ---------- NAV TABS (thumbnail tiles) ---------- */
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .tabs button {
+            border: 1px solid var(--line);
+            background: var(--white);
+            border-radius: 14px;
+            padding: 16px 10px 14px;
+            cursor: pointer;
+            font-family: var(--sans);
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--rich);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 9px;
+            transition: transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease), background .18s var(--ease);
+            box-shadow: 0 4px 14px rgba(20,15,5,.04);
+            position: relative;
+        }
+
+        .tabs button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 26px rgba(20,15,5,.10);
+            border-color: #e6d6a8;
+        }
+
+        .tabs button .tab-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            background: var(--cream);
+            color: var(--gold);
+            border: 1px solid #eee0bd;
+            transition: background .18s var(--ease), color .18s var(--ease);
+        }
+
+        .tabs button .tab-badge {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+
+        .tabs button.active {
+            background: var(--black);
+            border-color: var(--black);
+            color: var(--gold-lt);
+        }
+
+        .tabs button.active .tab-icon {
+            background: linear-gradient(145deg, var(--gold-lt), var(--gold));
+            color: var(--black);
+            border-color: transparent;
+        }
+
+        /* ---------- BUTTONS ---------- */
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: var(--sans);
+            font-size: 13.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: transform .15s var(--ease), box-shadow .15s var(--ease), opacity .15s var(--ease);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.primary {
+            background: linear-gradient(120deg, var(--black), var(--deep));
+            color: var(--gold-lt);
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+        .btn.danger {
+            background: var(--danger-lt);
+            color: var(--danger);
+        }
+
+        .btn.danger:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn.secondary {
+            background: var(--cream);
+            color: var(--rich);
+            border: 1px solid var(--line);
+        }
+
+        .btn.secondary:hover {
+            background: #f1e9d6;
+        }
+
+        .btn.small {
+            padding: 7px 11px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .btn.block {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* ---------- FORM ELEMENTS ---------- */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        label {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            margin-top: 6px;
+            font-family: var(--sans);
+            font-size: 14px;
+            background: #fffdf8;
+            color: var(--rich);
+            transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201,168,76,.18);
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            accent-color: var(--gold);
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        /* ---------- SECTION HEADER ---------- */
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .section-head p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .3px;
+        }
+
+        .pill.gold {
+            background: #fbf1da;
+            color: #8a6a1e;
+        }
+
+        .pill.ok {
+            background: var(--ok-lt);
+            color: var(--ok);
+        }
+
+        .pill.off {
+            background: #f1eee8;
+            color: var(--gray);
+        }
+
+        .pill.danger {
+            background: var(--danger-lt);
+            color: var(--danger);
+        }
+
+        /* ---------- LIST ROW (messages) ---------- */
+
+        .row {
+            border-top: 1px solid var(--line);
+            padding: 16px 4px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .row:first-child {
+            border-top: 0;
+        }
+
+        .row small {
+            color: var(--muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex: none;
+        }
+
+        .msg-unread {
+            background: #fffaf0;
+            border-radius: 12px;
+            border-top: 1px solid var(--line) !important;
+            padding: 16px;
+        }
+
+        .msg-unread b::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gold);
+            margin-right: 8px;
+        }
+
+        .msg-item {
+            display: flex;
+            gap: 14px;
+            border-top: 1px solid var(--line);
+            padding: 16px 4px;
+        }
+
+        .msg-item:first-child {
+            border-top: 0;
+        }
+
+        .msg-item.msg-unread {
+            border-top: 1px solid var(--line) !important;
+        }
+
+        .msg-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--black);
+            background: linear-gradient(145deg, #ece4d0, #d8c58f);
+        }
+
+        .msg-unread .msg-avatar {
+            background: linear-gradient(145deg, var(--gold-lt), var(--gold));
+        }
+
+        .msg-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .msg-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .msg-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--black);
+        }
+
+        .msg-email {
+            color: var(--muted);
+            font-weight: 400;
+            font-size: 12.5px;
+        }
+
+        .msg-date {
+            font-size: 11.5px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .msg-text {
+            margin: 8px 0 0;
+            font-size: 13.5px;
+            color: var(--rich);
+            line-height: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 46px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state i {
+            font-size: 30px;
+            color: #e6d6a8;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* ---------- CARD GRIDS (products / services / testimonials) ---------- */
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .item-card {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow .18s var(--ease), transform .18s var(--ease);
+        }
+
+        .item-card:hover {
+            box-shadow: 0 14px 30px rgba(20,15,5,.10);
+            transform: translateY(-2px);
+        }
+
+        .item-thumb {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+            background: var(--cream);
+        }
+
+        .item-thumb-icon {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: var(--gold);
+            background: linear-gradient(135deg, var(--cream), #f4ebd6);
+        }
+
+        .item-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--black);
+            background: linear-gradient(145deg, var(--pink), var(--pink-md));
+            margin: 16px auto 0;
+        }
+
+        .item-body {
+            padding: 14px 14px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 700;
+            font-size: 14.5px;
+            color: var(--black);
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .item-desc {
+            font-size: 12.5px;
+            color: var(--gray);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .stars-row {
+            color: var(--gold);
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .item-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 8px;
+            padding-top: 8px;
+        }
+
+        .item-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .quote-card {
+            text-align: center;
+            padding-bottom: 16px;
+        }
+
+        .quote-text {
+            font-style: italic;
+            color: var(--rich);
+        }
+
+        /* ---------- LOGIN ---------- */
+
+        .login-wrap {
+            min-height: calc(100vh - 74px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login {
+            max-width: 400px;
+            width: 100%;
+            margin: 0;
+            text-align: center;
+            padding: 36px 32px;
+        }
+
+        .login .brand-mark {
+            width: 56px;
+            height: 56px;
+            font-size: 22px;
+            margin: 0 auto 14px;
+        }
+
+        .login h2 {
+            font-size: 24px;
+        }
+
+        .login .sub {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .login label {
+            display: block;
+            text-align: left;
+            margin-top: 14px;
+        }
+
+        .notice {
+            padding: 11px 14px;
+            border-radius: 10px;
+            background: #fbf1da;
+            color: #6d541b;
+            margin-bottom: 4px;
+            font-size: 12.5px;
+            text-align: left;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        #loginErr {
+            color: var(--danger);
+            font-size: 13px;
+            min-height: 18px;
+            margin: 14px 0 0;
+        }
+
+        /* ---------- DASHBOARD ---------- */
+
+        .welcome-card {
+            background: linear-gradient(120deg, var(--black) 0%, var(--deep) 60%, #241b10 100%);
+            color: #fff;
+            border: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-card::after {
+            content: '';
+            position: absolute;
+            right: -60px;
+            top: -60px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,168,76,.28), transparent 70%);
+        }
+
+        .welcome-card h2 {
+            color: #fff;
+            font-size: 26px;
+        }
+
+        .welcome-card p {
+            color: #d8d2c4;
+            max-width: 520px;
+            font-size: 13.5px;
+            margin: 6px 0 0;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(20,15,5,.10);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            flex: none;
+            background: var(--cream);
+            color: var(--gold);
+        }
+
+        .stat-icon.pink {
+            background: var(--blush);
+            color: var(--pink-md);
+        }
+
+        .stat-icon.dark {
+            background: #eee;
+            color: var(--black);
+        }
+
+        .stat-icon.danger {
+            background: var(--danger-lt);
+            color: var(--danger);
+        }
+
+        .stat-number {
+            font-family: var(--serif);
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--black);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .quick-card {
+            border: 1px dashed #e6d6a8;
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            background: var(--cream);
+            transition: background .15s var(--ease), border-color .15s var(--ease);
+        }
+
+        .quick-card:hover {
+            background: #f6ecd1;
+            border-color: var(--gold);
+        }
+
+        .quick-card i {
+            font-size: 18px;
+            color: var(--gold);
+        }
+
+        .quick-card b {
+            display: block;
+            font-size: 13.5px;
+        }
+
+        .quick-card span {
+            font-size: 11.5px;
+            color: var(--muted);
+        }
+
+        /* ---------- IMAGE UPLOAD ---------- */
+
+        .image-preview img {
+            max-width: 180px;
+            max-height: 180px;
+            object-fit: cover;
+            margin-top: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            box-shadow: 0 6px 16px rgba(0,0,0,.08);
+        }
+
+        .upload-status {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+
+        @media (max-width: 900px) {
+            .tabs {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .quick-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .actions {
+                flex-wrap: wrap;
+            }
+
+            .brand-text span {
+                display: none;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .tabs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="brand">
+        <div class="brand-mark">A</div>
+        <div class="brand-text">
+            <strong>ADORE Hair Studio</strong>
+            <span>Admin Console</span>
+        </div>
+    </div>
+
+    <button
+        class="btn secondary"
+        id="logoutBtn"
+        onclick="logout()">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        Logout
+    </button>
+</header>
+
+<main>
+
+    <!-- LOGIN -->
+    <section id="loginView" class="hidden">
+
+        <div class="login-wrap">
+            <div class="card login">
+
+                <div class="brand-mark">A</div>
+
+                <h2>Welcome back</h2>
+                <p class="sub">Sign in to manage Adore Hair Studio</p>
+
+                <div class="notice">
+                    <i class="fa-solid fa-circle-info" style="margin-top:2px;"></i>
+                    <span>Use the ADMIN_EMAIL and ADMIN_PASSWORD configured on the server.</span>
+                </div>
+
+                <label>
+                    Email
+                    <input id="loginEmail" type="email" placeholder="you@adorehairstudio.com">
+                </label>
+
+                <label>
+                    Password
+                    <input id="loginPassword" type="password" placeholder="••••••••">
+                </label>
+
+                <button
+                    class="btn primary block"
+                    style="margin-top:20px"
+                    onclick="login()">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    Sign in
+                </button>
+
+                <p id="loginErr"></p>
+
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- ADMIN APPLICATION -->
+    <section id="appView" class="hidden">
+
+        <div class="tabs">
+
+            <button data-tab="dashboard" class="active">
+                <span class="tab-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                Dashboard
+            </button>
+
+            <button data-tab="products">
+                <span class="tab-icon"><i class="fa-solid fa-bag-shopping"></i></span>
+                Products
+            </button>
+
+            <button data-tab="services">
+                <span class="tab-icon"><i class="fa-solid fa-scissors"></i></span>
+                Services
+            </button>
+
+            <button data-tab="testimonials">
+                <span class="tab-icon"><i class="fa-solid fa-quote-left"></i></span>
+                Testimonials
+            </button>
+
+            <button data-tab="messages">
+                <span class="tab-icon"><i class="fa-solid fa-envelope"></i></span>
+                Messages
+                <span class="tab-badge hidden" id="msgTabBadge">0</span>
+            </button>
+
+            <button data-tab="settings">
+                <span class="tab-icon"><i class="fa-solid fa-gear"></i></span>
+                Site Settings
+            </button>
+
+        </div>
+
+        <div id="content" class="card"></div>
+
+    </section>
+
+</main>
+
+
+<script>
+
+    /* =========================================================
+       AUTHENTICATION / API
+    ========================================================= */
+
+    let token =
+        localStorage.getItem('adore_admin_token') || '';
+
+    let tab = 'dashboard';
+
+
+   const api = async (path, opt = {}) => {
+
+    const response = await fetch(path, {
+        ...opt,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(opt.headers || {}),
+            ...(token
+                ? {Authorization: 'Bearer ' + token}
+                : {})
+        }
+    });
+
+    if (response.status === 401) {
+        logout();
+        throw new Error('Session expired');
+    }
+
+    if (!response.ok) {
+        const message = await response.text();
+        throw new Error(
+            message || 'Request failed'
+        );
+    }
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    const text = await response.text();
+
+    if (!text) {
+        return null;
+    }
+
+    return JSON.parse(text);
+};
+
+
+    function showApp() {
+
+        document
+            .getElementById('loginView')
+            .classList.add('hidden');
+
+        document
+            .getElementById('appView')
+            .classList.remove('hidden');
+
+        document.getElementById(
+            'logoutBtn'
+        ).style.visibility = 'visible';
+
+        load();
+    }
+
+
+    function showLogin() {
+
+        document
+            .getElementById('loginView')
+            .classList.remove('hidden');
+
+        document
+            .getElementById('appView')
+            .classList.add('hidden');
+
+        document.getElementById(
+            'logoutBtn'
+        ).style.visibility = 'hidden';
+    }
+
+
+    async function login() {
+
+        const loginErr =
+            document.getElementById('loginErr');
+
+        loginErr.textContent = '';
+
+        try {
+
+            const email =
+                document.getElementById('loginEmail').value;
+
+            const password =
+                document.getElementById('loginPassword').value;
+
+            const r = await api(
+                '/api/auth/login',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                }
+            );
+
+            token = r.token;
+
+            localStorage.setItem(
+                'adore_admin_token',
+                token
+            );
+
+            showApp();
+
+        } catch (e) {
+
+            loginErr.textContent = e.message;
+        }
+    }
+
+
+    function logout() {
+
+        token = '';
+
+        localStorage.removeItem(
+            'adore_admin_token'
+        );
+
+        showLogin();
+    }
+
+
+    /* =========================================================
+       TABS
+    ========================================================= */
+
+    document
+        .querySelectorAll('.tabs button')
+        .forEach(button => {
+
+            button.onclick = () => {
+
+                document
+                    .querySelectorAll('.tabs button')
+                    .forEach(x =>
+                        x.classList.remove('active')
+                    );
+
+                button.classList.add('active');
+
+                tab = button.dataset.tab;
+
+                load();
+            };
+        });
+
+
+    /* =========================================================
+       HELPERS
+    ========================================================= */
+
+    const esc = s =>
+        String(s ?? '')
+            .replace(
+                /[&<>"]/g,
+                c => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;'
+                }[c])
+            );
+
+
+    const arg = x =>
+        JSON.stringify(x)
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e');
+
+
+    const starIcons = n => {
+
+        const count =
+            Math.max(0, Math.min(5, Number(n) || 0));
+
+        return (
+            '<i class="fa-solid fa-star"></i>'.repeat(count) +
+            '<i class="fa-regular fa-star" style="opacity:.4"></i>'.repeat(5 - count)
+        );
+    };
+
+
+    const initials = name =>
+        String(name || '?')
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .map(w => w[0]?.toUpperCase() || '')
+            .join('');
+
+
+    /* =========================================================
+       LOAD CURRENT TAB
+    ========================================================= */
+
+    async function load() {
+
+        const content =
+            document.getElementById('content');
+
+        content.innerHTML = `
+            <div class="empty-state">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                Loading…
+            </div>
+        `;
+
+        try {
+
+            if (tab === 'dashboard') {
+
+                const [
+                    products,
+                    services,
+                    testimonials,
+                    messages
+                ] = await Promise.all([
+                    api('/api/admin/products'),
+                    api('/api/admin/services'),
+                    api('/api/admin/testimonials'),
+                    api('/api/admin/messages')
+                ]);
+
+                updateMessageBadge(messages);
+
+                renderDashboard({
+                    products,
+                    services,
+                    testimonials,
+                    messages
+                });
+            }
+
+            if (tab === 'products') {
+                renderProducts(
+                    await api('/api/admin/products')
+                );
+            }
+
+            if (tab === 'services') {
+                renderServices(
+                    await api('/api/admin/services')
+                );
+            }
+
+            if (tab === 'testimonials') {
+                renderTestimonials(
+                    await api('/api/admin/testimonials')
+                );
+            }
+
+            if (tab === 'messages') {
+                const messages =
+                    await api('/api/admin/messages');
+
+                updateMessageBadge(messages);
+
+                renderMessages(messages);
+            }
+
+            if (tab === 'settings') {
+                renderSettings(
+                    await api('/api/admin/settings')
+                );
+            }
+
+        } catch (e) {
+
+            content.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    ${esc(e.message)}
+                </div>
+            `;
+        }
+    }
+
+
+    function goTab(name) {
+
+        tab = name;
+
+        document
+            .querySelectorAll('.tabs button')
+            .forEach(btn =>
+                btn.classList.toggle(
+                    'active',
+                    btn.dataset.tab === name
+                )
+            );
+
+        load();
+    }
+
+
+    function updateMessageBadge(messages) {
+
+        const badge =
+            document.getElementById('msgTabBadge');
+
+        if (!badge) return;
+
+        const unread =
+            (messages || [])
+                .filter(m => !m.readMessage)
+                .length;
+
+        if (unread > 0) {
+            badge.textContent =
+                unread > 9 ? '9+' : String(unread);
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+
+    /* =========================================================
+       DASHBOARD
+    ========================================================= */
+
+    function renderDashboard({ products, services, testimonials, messages }) {
+
+        const content =
+            document.getElementById('content');
+
+        const unread =
+            messages.filter(m => !m.readMessage).length;
+
+        const activeProducts =
+            products.filter(p => p.active !== false).length;
+
+        const hour =
+            new Date().getHours();
+
+        const greeting =
+            hour < 12
+                ? 'Good morning'
+                : hour < 18
+                    ? 'Good afternoon'
+                    : 'Good evening';
+
+        content.innerHTML = `
+
+            <div class="card welcome-card">
+                <h2>${greeting}, welcome back ✨</h2>
+                <p>
+                    Here's a snapshot of Adore Hair Studio. Manage your
+                    wigs, services, testimonials and client messages
+                    all from this dashboard.
+                </p>
+            </div>
+
+            <div class="stat-grid">
+
+                <div class="stat-card" onclick="goTab('products')">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number">${products.length}</div>
+                        <div class="stat-label">Products · ${activeProducts} active</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="goTab('services')">
+                    <div class="stat-icon pink">
+                        <i class="fa-solid fa-scissors"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number">${services.length}</div>
+                        <div class="stat-label">Services offered</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="goTab('testimonials')">
+                    <div class="stat-icon dark">
+                        <i class="fa-solid fa-quote-left"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number">${testimonials.length}</div>
+                        <div class="stat-label">Client testimonials</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="goTab('messages')">
+                    <div class="stat-icon ${unread ? 'danger' : ''}">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number">${messages.length}</div>
+                        <div class="stat-label">${unread ? unread + ' unread message' + (unread === 1 ? '' : 's') : 'Messages · all read'}</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card">
+
+                <div class="section-head">
+                    <div>
+                        <h3>Quick actions</h3>
+                        <p>Jump straight into the most common tasks.</p>
+                    </div>
+                </div>
+
+                <div class="quick-grid">
+
+                    <div class="quick-card" onclick="goTab('products')">
+                        <i class="fa-solid fa-plus"></i>
+                        <div>
+                            <b>Add a product</b>
+                            <span>List a new wig or item</span>
+                        </div>
+                    </div>
+
+                    <div class="quick-card" onclick="goTab('testimonials')">
+                        <i class="fa-solid fa-star"></i>
+                        <div>
+                            <b>Add a testimonial</b>
+                            <span>Share a happy client review</span>
+                        </div>
+                    </div>
+
+                    <div class="quick-card" onclick="goTab('settings')">
+                        <i class="fa-solid fa-gear"></i>
+                        <div>
+                            <b>Update site settings</b>
+                            <span>Contact info & hero text</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+    }
+
+
+    /* =========================================================
+       PRODUCTS
+    ========================================================= */
+
+    function renderProducts(xs) {
+
+        const content =
+            document.getElementById('content');
+
+        const categoryLabels = {
+            'lace': 'Lace Front',
+            'body-wave': 'Body Wave',
+            'curly': 'Curly',
+            'colored': 'Colored',
+            'closure': 'Closure'
+        };
+
+        content.innerHTML = `
+
+            <div class="section-head">
+                <div>
+                    <h2><i class="fa-solid fa-bag-shopping" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>Products</h2>
+                    <p>Add and manage wigs and other products (${xs.length} total).</p>
+                </div>
+
+                <button
+                    class="btn primary"
+                    onclick="productForm()">
+                    <i class="fa-solid fa-plus"></i>
+                    Add product
+                </button>
+            </div>
+
+            <div id="form"></div>
+
+            ${xs.length ? `
+                <div class="item-grid">
+
+                    ${xs.map(x => `
+
+                        <div class="item-card">
+
+                            ${x.imageUrl
+                                ? `<img class="item-thumb" src="${esc(x.imageUrl)}" alt="${esc(x.name)}">`
+                                : `<div class="item-thumb-icon"><i class="fa-solid fa-image"></i></div>`
+                            }
+
+                            <div class="item-body">
+
+                                <div class="item-title">${esc(x.name)}</div>
+
+                                <div class="item-meta">
+                                    <span class="pill gold">GH₵ ${esc(x.price)}</span>
+                                    ${x.category
+                                        ? `<span class="pill off">${esc(categoryLabels[x.category] || x.category)}</span>`
+                                        : ''}
+                                    ${x.featured ? `<span class="pill ok"><i class="fa-solid fa-star"></i> Featured</span>` : ''}
+                                    ${x.active === false ? `<span class="pill danger">Hidden</span>` : ''}
+                                </div>
+
+                                ${x.description
+                                    ? `<div class="item-desc">${esc(x.description)}</div>`
+                                    : ''}
+
+                                <div class="item-actions">
+
+                                    <button
+                                        class="btn secondary small"
+                                        onclick='productForm(${arg(x)})'>
+                                        <i class="fa-solid fa-pen"></i>
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        class="btn danger small"
+                                        onclick="del('products', ${x.id})">
+                                        <i class="fa-solid fa-trash"></i>
+                                        Delete
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    `).join('')}
+
+                </div>
+            ` : `
+                <div class="empty-state">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    No products yet. Add your first wig to get started.
+                </div>
+            `}
+        `;
+    }
+
+
+    function productForm(x = {}) {
+
+        const form =
+            document.getElementById('form');
+
+        form.innerHTML = `
+
+            <div class="card" style="border:1px solid #eee0bd;background:#fffdf6;">
+
+                <h3><i class="fa-solid fa-pen" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>${x.id ? 'Edit' : 'New'} product
+                </h3>
+
+                <div class="grid">
+
+                    <label>
+
+                        Name
+
+                        <input
+                            id="pname"
+                            value="${esc(x.name || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Price
+
+                        <input
+                            id="pprice"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value="${esc(x.price || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Old price
+
+                        <input
+                            id="pold"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value="${esc(x.oldPrice || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Category
+
+                        <select id="pcat">
+
+                            <option
+                                value=""
+                                ${!x.category ? 'selected' : ''}>
+                                Select category
+                            </option>
+
+                            <option
+                                value="lace"
+                                ${x.category === 'lace'
+                                    ? 'selected'
+                                    : ''}>
+                                Lace Front
+                            </option>
+
+                            <option
+                                value="body-wave"
+                                ${x.category === 'body-wave'
+                                    ? 'selected'
+                                    : ''}>
+                                Body Wave
+                            </option>
+
+                            <option
+                                value="curly"
+                                ${x.category === 'curly'
+                                    ? 'selected'
+                                    : ''}>
+                                Curly
+                            </option>
+
+                            <option
+                                value="colored"
+                                ${x.category === 'colored'
+                                    ? 'selected'
+                                    : ''}>
+                                Colored
+                            </option>
+
+                            <option
+                                value="closure"
+                                ${x.category === 'closure'
+                                    ? 'selected'
+                                    : ''}>
+                                Closure
+                            </option>
+
+                        </select>
+
+                    </label>
+
+
+                    <label>
+
+                        Tag
+
+                        <input
+                            id="ptag"
+                            placeholder="e.g. Best Seller"
+                            value="${esc(x.tag || '')}">
+
+                    </label>
+
+
+                    <label>
+
+                        Stars
+
+                        <input
+                            id="pstars"
+                            type="number"
+                            min="0"
+                            max="5"
+                            value="${x.stars ?? 5}">
+
+                    </label>
+
+
+                    <label>
+
+                        Display order
+
+                        <input
+                            id="porder"
+                            type="number"
+                            value="${x.displayOrder ?? 0}">
+
+                    </label>
+
+                </div>
+
+
+                <br>
+
+
+                <label>
+
+                    Product Image
+
+                    <input
+                        id="pfile"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp">
+
+                </label>
+
+
+                <input
+                    id="pimg"
+                    type="hidden"
+                    value="${esc(x.imageUrl || '')}">
+
+
+                <div
+                    id="imagePreview"
+                    class="image-preview">
+
+                    ${
+                        x.imageUrl
+                            ? `
+                                <img
+                                    src="${esc(x.imageUrl)}"
+                                    alt="Product image">
+                              `
+                            : ''
+                    }
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="btn secondary"
+                    onclick="uploadProductImage()"
+                    style="margin-top:10px">
+
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Upload Image
+
+                </button>
+
+
+                <span
+                    id="uploadStatus"
+                    class="upload-status">
+                </span>
+
+
+                <br><br>
+
+
+                <label>
+
+                    Description
+
+                    <textarea
+                        id="pdesc"
+                        placeholder="Describe the wig...">${esc(x.description || '')}</textarea>
+
+                </label>
+
+
+                <p>
+
+                    <label>
+
+                        <input
+                            id="pfeatured"
+                            type="checkbox"
+                            ${x.featured
+                                ? 'checked'
+                                : ''}>
+
+                        Featured
+
+                    </label>
+
+
+                    &nbsp;&nbsp;
+
+
+                    <label>
+
+                        <input
+                            id="pactive"
+                            type="checkbox"
+                            ${x.active !== false
+                                ? 'checked'
+                                : ''}>
+
+                        Active
+
+                    </label>
+
+                </p>
+
+
+                <button
+                    class="btn primary"
+                    onclick="saveProduct(${x.id || 'null'})">
+
+                    <i class="fa-solid fa-check"></i>
+                    Save Product
+
+                </button>
+
+            </div>
+        `;
+    }
+
+
+    async function uploadProductImage() {
+
+        const input =
+            document.getElementById('pfile');
+
+        const file =
+            input.files[0];
+
+        const status =
+            document.getElementById(
+                'uploadStatus'
+            );
+
+
+        if (!file) {
+
+            alert('Choose an image first.');
+
+            return;
+        }
+
+
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+
+        if (!allowedTypes.includes(file.type)) {
+
+            alert(
+                'Only JPG, PNG and WEBP images are allowed.'
+            );
+
+            return;
+        }
+
+
+        const maxSize =
+            10 * 1024 * 1024;
+
+
+        if (file.size > maxSize) {
+
+            alert(
+                'Image is too large. Maximum size is 10MB.'
+            );
+
+            return;
+        }
+
+
+        status.textContent =
+            'Uploading...';
+
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            'file',
+            file
+        );
+
+
+        try {
+
+            const res =
+                await fetch(
+                    '/api/admin/images/upload',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            Authorization:
+                                'Bearer ' + token
+                        },
+
+                        body: formData
+                    }
+                );
+
+
+            if (res.status === 401) {
+
+                logout();
+
+                throw new Error(
+                    'Session expired'
+                );
+            }
+
+
+            if (!res.ok) {
+
+                throw new Error(
+                    await res.text()
+                );
+            }
+
+
+            const result =
+                await res.json();
+
+
+            if (!result.url) {
+
+                throw new Error(
+                    'Upload completed but no image URL was returned.'
+                );
+            }
+
+
+            document
+                .getElementById('pimg')
+                .value =
+                result.url;
+
+
+            document
+                .getElementById(
+                    'imagePreview'
+                )
+                .innerHTML = `
+
+                    <img
+                        src="${esc(result.url)}"
+                        alt="Uploaded product image">
+
+                `;
+
+
+            status.textContent =
+                '✓ Uploaded successfully';
+
+
+        } catch (e) {
+
+            console.error(
+                'Image upload failed:',
+                e
+            );
+
+
+            status.textContent =
+                'Upload failed';
+
+
+            alert(
+                'Image upload failed. Check the browser console or server logs.'
+            );
+        }
+    }
+
+
+    async function saveProduct(id) {
+
+        const name =
+            document.getElementById('pname')
+                .value
+                .trim();
+
+        const price =
+            document.getElementById('pprice')
+                .value;
+
+        const imageUrl =
+            document.getElementById('pimg')
+                .value;
+
+
+        if (!name) {
+
+            alert(
+                'Please enter the product name.'
+            );
+
+            return;
+        }
+
+
+        if (
+            !price ||
+            Number(price) <= 0
+        ) {
+
+            alert(
+                'Please enter a valid product price.'
+            );
+
+            return;
+        }
+
+
+        if (!imageUrl) {
+
+            alert(
+                'Please upload a product image before saving.'
+            );
+
+            return;
+        }
+
+
+        const body = {
+
+            name,
+
+            price:
+                Number(price),
+
+            oldPrice:
+                document
+                    .getElementById('pold')
+                    .value
+
+                    ? Number(
+                        document
+                            .getElementById('pold')
+                            .value
+                      )
+
+                    : null,
+
+            category:
+                document
+                    .getElementById('pcat')
+                    .value,
+
+            tag:
+                document
+                    .getElementById('ptag')
+                    .value
+                    .trim(),
+
+            imageUrl,
+
+            stars:
+                Number(
+                    document
+                        .getElementById('pstars')
+                        .value
+                ),
+
+            displayOrder:
+                Number(
+                    document
+                        .getElementById('porder')
+                        .value
+                ),
+
+            description:
+                document
+                    .getElementById('pdesc')
+                    .value
+                    .trim(),
+
+            featured:
+                document
+                    .getElementById('pfeatured')
+                    .checked,
+
+            active:
+                document
+                    .getElementById('pactive')
+                    .checked
+        };
+
+
+        try {
+
+            await api(
+
+                '/api/admin/products'
+                + (id
+                    ? '/' + id
+                    : ''),
+
+                {
+
+                    method:
+                        id
+                            ? 'PUT'
+                            : 'POST',
+
+                    body:
+                        JSON.stringify(body)
+
+                }
+            );
+
+
+            alert(
+                id
+                    ? 'Product updated successfully.'
+                    : 'Product added successfully.'
+            );
+
+
+            load();
+
+
+        } catch (e) {
+
+            alert(
+                'Could not save product: '
+                + e.message
+            );
+        }
+    }
+
+
+    /* =========================================================
+       SERVICES
+    ========================================================= */
+
+    function renderServices(xs) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+
+        content.innerHTML = `
+
+            <div class="section-head">
+                <div>
+                    <h2><i class="fa-solid fa-scissors" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>Services</h2>
+                    <p>Add and manage the services on offer (${xs.length} total).</p>
+                </div>
+
+                <button
+                    class="btn primary"
+                    onclick="serviceForm()">
+                    <i class="fa-solid fa-plus"></i>
+                    Add service
+                </button>
+            </div>
+
+            <div id="form"></div>
+
+            ${xs.length ? `
+                <div class="item-grid">
+
+                    ${xs.map(x => `
+
+                        <div class="item-card">
+
+                            <div class="item-thumb-icon">
+                                <i class="fa ${esc(x.icon || 'fa-scissors')}"></i>
+                            </div>
+
+                            <div class="item-body">
+
+                                <div class="item-title">${esc(x.name)}</div>
+
+                                <div class="item-meta">
+                                    ${x.priceLabel
+                                        ? `<span class="pill gold">${esc(x.priceLabel)}</span>`
+                                        : ''}
+                                    ${x.active === false ? `<span class="pill danger">Hidden</span>` : ''}
+                                </div>
+
+                                ${x.description
+                                    ? `<div class="item-desc">${esc(x.description)}</div>`
+                                    : ''}
+
+                                <div class="item-actions">
+
+                                    <button
+                                        class="btn secondary small"
+                                        onclick='serviceForm(${arg(x)})'>
+                                        <i class="fa-solid fa-pen"></i>
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        class="btn danger small"
+                                        onclick="del('services', ${x.id})">
+                                        <i class="fa-solid fa-trash"></i>
+                                        Delete
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    `).join('')}
+
+                </div>
+            ` : `
+                <div class="empty-state">
+                    <i class="fa-solid fa-scissors"></i>
+                    No services yet. Add your first service to get started.
+                </div>
+            `}
+        `;
+    }
+
+
+    function serviceForm(x = {}) {
+
+        const form =
+            document.getElementById(
+                'form'
+            );
+
+
+        form.innerHTML = `
+
+            <div class="card" style="border:1px solid #eee0bd;background:#fffdf6;">
+
+                <h3><i class="fa-solid fa-pen" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>${x.id
+                        ? 'Edit'
+                        : 'New'} service
+                </h3>
+
+
+                <div class="grid">
+
+                    <label>
+
+                        Name
+
+                        <input
+                            id="sname"
+                            value="${esc(
+                                x.name || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Price label
+
+                        <input
+                            id="sprice"
+                            placeholder="e.g. From GH₵ 200"
+                            value="${esc(
+                                x.priceLabel || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Font Awesome icon class
+
+                        <input
+                            id="sicon"
+                            value="${esc(
+                                x.icon ||
+                                'fa-scissors'
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Display order
+
+                        <input
+                            id="sorder"
+                            type="number"
+                            value="${
+                                x.displayOrder ?? 0
+                            }">
+
+                    </label>
+
+                </div>
+
+
+                <br>
+
+
+                <label>
+
+                    Description
+
+                    <textarea
+                        id="sdesc">${esc(
+                            x.description || ''
+                        )}</textarea>
+
+                </label>
+
+
+                <p>
+
+                    <label>
+
+                        <input
+                            id="sactive"
+                            type="checkbox"
+                            ${x.active !== false
+                                ? 'checked'
+                                : ''}>
+
+                        Active
+
+                    </label>
+
+                </p>
+
+
+                <button
+                    class="btn primary"
+                    onclick="saveService(${x.id || 'null'})">
+
+                    <i class="fa-solid fa-check"></i>
+                    Save
+
+                </button>
+
+            </div>
+
+        `;
+    }
+
+
+    async function saveService(id) {
+
+        const body = {
+
+            name:
+                document
+                    .getElementById('sname')
+                    .value,
+
+            priceLabel:
+                document
+                    .getElementById('sprice')
+                    .value,
+
+            icon:
+                document
+                    .getElementById('sicon')
+                    .value,
+
+            displayOrder:
+                Number(
+                    document
+                        .getElementById('sorder')
+                        .value
+                ),
+
+            description:
+                document
+                    .getElementById('sdesc')
+                    .value,
+
+            active:
+                document
+                    .getElementById('sactive')
+                    .checked
+        };
+
+
+        await api(
+
+            '/api/admin/services'
+            + (id
+                ? '/' + id
+                : ''),
+
+            {
+                method:
+                    id
+                        ? 'PUT'
+                        : 'POST',
+
+                body:
+                    JSON.stringify(body)
+            }
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       TESTIMONIALS
+    ========================================================= */
+
+    function renderTestimonials(xs) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+
+        content.innerHTML = `
+
+            <div class="section-head">
+                <div>
+                    <h2><i class="fa-solid fa-quote-left" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>Testimonials</h2>
+                    <p>Manage client reviews shown on the site (${xs.length} total).</p>
+                </div>
+
+                <button
+                    class="btn primary"
+                    onclick="testimonialForm()">
+                    <i class="fa-solid fa-plus"></i>
+                    Add testimonial
+                </button>
+            </div>
+
+            <div id="form"></div>
+
+            ${xs.length ? `
+                <div class="item-grid">
+
+                    ${xs.map(x => `
+
+                        <div class="item-card quote-card">
+
+                            <div class="item-avatar">${esc(initials(x.name))}</div>
+
+                            <div class="item-body" style="text-align:center;">
+
+                                <div class="item-title">${esc(x.name)}</div>
+
+                                <div class="item-meta" style="justify-content:center;">
+                                    ${x.title
+                                        ? `<span class="pill off">${esc(x.title)}</span>`
+                                        : ''}
+                                    ${x.active === false ? `<span class="pill danger">Hidden</span>` : ''}
+                                </div>
+
+                                <div class="stars-row" style="text-align:center;">${starIcons(x.stars)}</div>
+
+                                ${x.text
+                                    ? `<div class="item-desc quote-text" style="text-align:center;">"${esc(x.text)}"</div>`
+                                    : ''}
+
+                                <div class="item-actions">
+
+                                    <button
+                                        class="btn secondary small"
+                                        onclick='testimonialForm(${arg(x)})'>
+                                        <i class="fa-solid fa-pen"></i>
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        class="btn danger small"
+                                        onclick="del('testimonials', ${x.id})">
+                                        <i class="fa-solid fa-trash"></i>
+                                        Delete
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    `).join('')}
+
+                </div>
+            ` : `
+                <div class="empty-state">
+                    <i class="fa-solid fa-quote-left"></i>
+                    No testimonials yet. Add your first client review.
+                </div>
+            `}
+        `;
+    }
+
+
+    function testimonialForm(x = {}) {
+
+        const form =
+            document.getElementById(
+                'form'
+            );
+
+
+        form.innerHTML = `
+
+            <div class="card" style="border:1px solid #eee0bd;background:#fffdf6;">
+
+                <h3><i class="fa-solid fa-pen" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>${x.id
+                        ? 'Edit'
+                        : 'New'} testimonial
+                </h3>
+
+
+                <div class="grid">
+
+                    <label>
+
+                        Name
+
+                        <input
+                            id="tname"
+                            value="${esc(
+                                x.name || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Title
+
+                        <input
+                            id="ttitle"
+                            value="${esc(
+                                x.title || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        Stars
+
+                        <input
+                            id="tstars"
+                            type="number"
+                            min="1"
+                            max="5"
+                            value="${
+                                x.stars ?? 5
+                            }">
+
+                    </label>
+
+
+                    <label>
+
+                        Display order
+
+                        <input
+                            id="torder"
+                            type="number"
+                            value="${
+                                x.displayOrder ?? 0
+                            }">
+
+                    </label>
+
+                </div>
+
+
+                <br>
+
+
+                <label>
+
+                    Testimonial
+
+                    <textarea
+                        id="ttext">${esc(
+                            x.text || ''
+                        )}</textarea>
+
+                </label>
+
+
+                <p>
+
+                    <label>
+
+                        <input
+                            id="tactive"
+                            type="checkbox"
+                            ${x.active !== false
+                                ? 'checked'
+                                : ''}>
+
+                        Active
+
+                    </label>
+
+                </p>
+
+
+                <button
+                    class="btn primary"
+                    onclick="saveTestimonial(${x.id || 'null'})">
+
+                    <i class="fa-solid fa-check"></i>
+                    Save
+
+                </button>
+
+            </div>
+
+        `;
+    }
+
+
+    async function saveTestimonial(id) {
+
+        const body = {
+
+            name:
+                document
+                    .getElementById('tname')
+                    .value,
+
+            title:
+                document
+                    .getElementById('ttitle')
+                    .value,
+
+            stars:
+                Number(
+                    document
+                        .getElementById('tstars')
+                        .value
+                ),
+
+            displayOrder:
+                Number(
+                    document
+                        .getElementById('torder')
+                        .value
+                ),
+
+            text:
+                document
+                    .getElementById('ttext')
+                    .value,
+
+            active:
+                document
+                    .getElementById('tactive')
+                    .checked
+        };
+
+
+        await api(
+
+            '/api/admin/testimonials'
+            + (id
+                ? '/' + id
+                : ''),
+
+            {
+                method:
+                    id
+                        ? 'PUT'
+                        : 'POST',
+
+                body:
+                    JSON.stringify(body)
+            }
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       CONTACT MESSAGES
+    ========================================================= */
+
+    function renderMessages(xs) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+        const unread =
+            xs.filter(m => !m.readMessage).length;
+
+
+        content.innerHTML = `
+
+            <div class="section-head">
+                <div>
+                    <h2><i class="fa-solid fa-envelope" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>Contact Messages</h2>
+                    <p>
+                        ${xs.length} message${xs.length === 1 ? '' : 's'}
+                        ${unread ? ` · <span class="pill danger">${unread} unread</span>` : ' · all read'}
+                    </p>
+                </div>
+            </div>
+
+            ${
+                xs.length
+                    ? ''
+                    : `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                            No messages yet.
+                        </div>
+                    `
+            }
+
+
+            ${xs.map(x => `
+
+                <div class="msg-item ${x.readMessage ? '' : 'msg-unread'}">
+
+                    <div class="msg-avatar">${esc(initials(x.name))}</div>
+
+                    <div class="msg-content">
+
+                        <div class="msg-top">
+                            <div>
+                                <span class="msg-name">${esc(x.name)}</span>
+                                <span class="msg-email">— ${esc(x.email)}</span>
+                            </div>
+                            <span class="msg-date">
+                                ${new Date(x.createdAt).toLocaleString()}
+                            </span>
+                        </div>
+
+                        <div class="item-meta" style="margin-top:6px;">
+                            <span class="pill gold">${esc(x.service || 'General')}</span>
+                            ${x.readMessage ? '' : '<span class="pill danger">New</span>'}
+                        </div>
+
+                        <p class="msg-text">${esc(x.message)}</p>
+
+                        <div class="actions" style="margin-top:10px;">
+
+                            ${
+                                x.readMessage
+                                    ? ''
+                                    : `
+                                        <button
+                                            class="btn secondary small"
+                                            onclick="markRead(${x.id})">
+                                            <i class="fa-solid fa-envelope-open"></i>
+                                            Mark read
+                                        </button>
+                                      `
+                            }
+
+
+                            <button
+                                class="btn danger small"
+                                onclick="del('messages', ${x.id})">
+                                <i class="fa-solid fa-trash"></i>
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `).join('')}
+
+        `;
+    }
+
+
+    async function markRead(id) {
+
+        await api(
+
+            '/api/admin/messages/'
+            + id
+            + '/read',
+
+            {
+                method: 'PUT'
+            }
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       SITE SETTINGS
+    ========================================================= */
+
+    function renderSettings(x) {
+
+        const content =
+            document.getElementById(
+                'content'
+            );
+
+
+        content.innerHTML = `
+
+            <div class="section-head">
+                <div>
+                    <h2><i class="fa-solid fa-gear" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>Site Settings</h2>
+                    <p>Contact details, socials and homepage hero text.</p>
+                </div>
+            </div>
+
+            <div class="card" style="border:1px solid #eee0bd;background:#fffdf6;">
+
+                <h3><i class="fa-solid fa-address-book" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>Contact &amp; Social</h3>
+
+                <div class="grid" style="margin-top:14px;">
+
+                    <label>
+
+                        <i class="fa-solid fa-phone" style="margin-right:4px;color:var(--gold);"></i> Phone
+
+                        <input
+                            id="xphone"
+                            value="${esc(
+                                x.phone || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        <i class="fa-brands fa-whatsapp" style="margin-right:4px;color:var(--gold);"></i> WhatsApp digits
+
+                        <input
+                            id="xwa"
+                            value="${esc(
+                                x.whatsapp || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        <i class="fa-solid fa-envelope" style="margin-right:4px;color:var(--gold);"></i> Email
+
+                        <input
+                            id="xemail"
+                            value="${esc(
+                                x.email || ''
+                            )}">
+
+                    </label>
+
+
+                    <label>
+
+                        <i class="fa-brands fa-instagram" style="margin-right:4px;color:var(--gold);"></i> Instagram URL
+
+                        <input
+                            id="xig"
+                            value="${esc(
+                                x.instagram || ''
+                            )}">
+
+                    </label>
+
+
+                    <label style="grid-column:1 / -1;">
+
+                        <i class="fa-solid fa-location-dot" style="margin-right:4px;color:var(--gold);"></i> Address
+
+                        <input
+                            id="xaddress"
+                            value="${esc(
+                                x.address || ''
+                            )}">
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <div class="card" style="border:1px solid #eee0bd;background:#fffdf6;">
+
+                <h3><i class="fa-solid fa-star" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>Homepage Hero</h3>
+
+                <div style="margin-top:14px;">
+
+                    <label>
+
+                        Hero eyebrow
+
+                        <input
+                            id="xeye"
+                            value="${esc(
+                                x.heroEyebrow || ''
+                            )}">
+
+                    </label>
+
+
+                    <label style="display:block;margin-top:14px;">
+
+                        Hero title
+
+                        <input
+                            id="xtitle"
+                            value="${esc(
+                                x.heroTitle || ''
+                            )}">
+
+                    </label>
+
+
+                    <label style="display:block;margin-top:14px;">
+
+                        Hero tagline
+
+                        <textarea
+                            id="xtag">${esc(
+                                x.heroTagline || ''
+                            )}</textarea>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="btn primary"
+                onclick="saveSettings()">
+
+                <i class="fa-solid fa-check"></i>
+                Save settings
+
+            </button>
+
+        `;
+    }
+
+
+    async function saveSettings() {
+
+        const body = {
+
+            id: 1,
+
+            phone:
+                document
+                    .getElementById('xphone')
+                    .value,
+
+            whatsapp:
+                document
+                    .getElementById('xwa')
+                    .value,
+
+            email:
+                document
+                    .getElementById('xemail')
+                    .value,
+
+            instagram:
+                document
+                    .getElementById('xig')
+                    .value,
+
+            address:
+                document
+                    .getElementById('xaddress')
+                    .value,
+
+            heroEyebrow:
+                document
+                    .getElementById('xeye')
+                    .value,
+
+            heroTitle:
+                document
+                    .getElementById('xtitle')
+                    .value,
+
+            heroTagline:
+                document
+                    .getElementById('xtag')
+                    .value
+        };
+
+
+        await api(
+
+            '/api/admin/settings',
+
+            {
+                method: 'PUT',
+                body:
+                    JSON.stringify(body)
+            }
+        );
+
+
+        alert(
+            'Settings saved successfully.'
+        );
+
+
+        load();
+    }
+
+
+    /* =========================================================
+       DELETE
+    ========================================================= */
+
+ async function del(type, id) {
+    const ok = confirm(
+        'Are you sure you want to permanently delete this item?'
+    );
+
+    if (!ok) return;
+
+    try {
+        await api(
+            '/api/admin/' + type + '/' + id,
+            {
+                method: 'DELETE'
+            }
+        );
+
+        alert('Deleted successfully.');
+
+        await load();
+
+    } catch (e) {
+        console.error('Delete failed:', e);
+
+        alert(
+            'Could not delete this item.\n\n' +
+            e.message
+        );
+    }
+}
+
+    /* =========================================================
+       START
+    ========================================================= */
+
+    if (token) {
+        showApp();
+    } else {
+        showLogin();
+    }
+
+</script>
+
+</body>
+</html>
