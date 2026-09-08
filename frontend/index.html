@@ -258,6 +258,21 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
 .cart-total em{font-family:var(--serif);font-size:1.3rem;color:var(--black)}
 .checkout-btn{width:100%;background:var(--gold);color:var(--black);border:none;border-radius:12px;padding:1rem;font-size:0.82rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all var(--t)}
 .checkout-btn:hover{background:var(--gold-lt);transform:translateY(-1px)}
+.checkout-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* CHECKOUT MODAL */
+#checkout-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity var(--t)}
+#checkout-overlay.open{opacity:1;pointer-events:all}
+#checkout-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(0.96);z-index:1201;width:90%;max-width:420px;max-height:85vh;overflow-y:auto;background:var(--white);border-radius:20px;padding:2rem 1.9rem;opacity:0;pointer-events:none;transition:all 0.35s var(--ease);box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+#checkout-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%) scale(1)}
+.checkout-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
+.checkout-hd h3{font-family:var(--serif);font-size:1.25rem}
+.checkout-close{background:none;border:none;font-size:1.2rem;color:var(--gray);cursor:pointer}
+.checkout-summary{background:var(--cream);border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.4rem;max-height:160px;overflow-y:auto}
+.checkout-summary-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:0.3rem 0;color:var(--black)}
+.checkout-summary-row span:last-child{color:var(--gray)}
+.checkout-summary-total{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid rgba(0,0,0,0.1);margin-top:0.6rem;padding-top:0.6rem;font-size:0.95rem}
+.checkout-note{font-size:0.75rem;color:var(--gray);margin-top:0.8rem;line-height:1.5}
 #cart-toast{position:fixed;bottom:2rem;right:2rem;z-index:9999;background:var(--black);color:var(--gold);border:1px solid rgba(201,168,76,0.3);border-radius:12px;padding:1rem 1.5rem;font-size:0.85rem;font-weight:500;display:flex;align-items:center;gap:0.7rem;transform:translateY(80px);opacity:0;transition:all 0.4s var(--ease);box-shadow:0 10px 40px rgba(0,0,0,0.3)}
 #cart-toast.show{transform:translateY(0);opacity:1}
 
@@ -574,10 +589,44 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
   </div>
   <div class="cart-ft" id="cartFt" style="display:none">
     <div class="cart-total"><strong>Total</strong><em id="cartTotal">GH₵ 0</em></div>
-    <button class="checkout-btn" onclick="checkoutAlert()"><i class="fa fa-lock" style="margin-right:0.5rem"></i>Checkout Securely</button>
+    <button class="checkout-btn" onclick="openCheckout()"><i class="fa fa-lock" style="margin-right:0.5rem"></i>Checkout Securely</button>
   </div>
 </div>
 <div id="cart-toast"><i class="fa fa-check-circle"></i><span id="toast-msg">Added to cart!</span></div>
+
+<!-- CHECKOUT MODAL -->
+<div id="checkout-overlay" onclick="closeCheckout()"></div>
+<div id="checkout-modal">
+  <div id="checkoutFormBlock">
+    <div class="checkout-hd">
+      <h3>Confirm Your Order</h3>
+      <button class="checkout-close" onclick="closeCheckout()"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="checkout-summary" id="checkoutSummary"></div>
+    <div class="form-row">
+      <label>Full Name *</label>
+      <input type="text" id="coName" placeholder="Your full name">
+      <div class="field-err" id="coNameErr">Please enter your full name.</div>
+    </div>
+    <div class="form-row">
+      <label>Email Address *</label>
+      <input type="email" id="coEmail" placeholder="your@email.com">
+      <div class="field-err" id="coEmailErr">Please enter a valid email address.</div>
+    </div>
+    <div class="form-row">
+      <label>Phone Number</label>
+      <input type="tel" id="coPhone" placeholder="+233 24 000 0000">
+    </div>
+    <button class="checkout-btn" id="checkoutSubmitBtn" onclick="submitCheckout()"><i class="fa fa-lock" style="margin-right:0.5rem"></i>Place Order</button>
+    <p class="checkout-note">We'll confirm availability and payment details by email, phone, or WhatsApp shortly after you place your order.</p>
+  </div>
+  <div class="form-success" id="checkoutSuccess" style="display:none">
+    <i class="fa fa-check-circle"></i>
+    <h3>Order Sent!</h3>
+    <p>Thank you! We've received your order and will reach out shortly to confirm the details and arrange payment.</p>
+    <button class="checkout-btn" style="margin-top:1.2rem" onclick="closeCheckout()">Close</button>
+  </div>
+</div>
 
 <script src="config.js"></script>
 <script>
@@ -681,7 +730,60 @@ function updateCartUI(){
   }
 }
 function toggleCart(){document.getElementById('cart-drawer').classList.toggle('open');document.getElementById('cart-overlay').classList.toggle('open');}
-function checkoutAlert(){alert('Checkout coming soon!\n\nPlease contact us via WhatsApp or phone to complete your order.\n+233 24 000 0000');}
+
+function buildOrderMessage(){
+  const lines=cart.map(c=>`- ${c.name} x${c.qty} — GH\u20B5 ${(Number(c.price)*c.qty).toLocaleString()} (GH\u20B5 ${Number(c.price).toLocaleString()} each)`);
+  const total=cart.reduce((a,c)=>a+Number(c.price)*c.qty,0);
+  return `Order Request via Website Cart:\n\n${lines.join('\n')}\n\nTotal: GH\u20B5 ${total.toLocaleString()}`;
+}
+
+function openCheckout(){
+  if(!cart.length)return;
+  const total=cart.reduce((a,c)=>a+Number(c.price)*c.qty,0);
+  document.getElementById('checkoutSummary').innerHTML=
+    cart.map(c=>`<div class="checkout-summary-row"><span>${c.name} x${c.qty}</span><span>GH&#8373; ${(Number(c.price)*c.qty).toLocaleString()}</span></div>`).join('')
+    +`<div class="checkout-summary-total"><span>Total</span><span>GH&#8373; ${total.toLocaleString()}</span></div>`;
+  document.getElementById('checkoutFormBlock').style.display='block';
+  document.getElementById('checkoutSuccess').style.display='none';
+  document.getElementById('checkout-overlay').classList.add('open');
+  document.getElementById('checkout-modal').classList.add('open');
+}
+function closeCheckout(){
+  document.getElementById('checkout-overlay').classList.remove('open');
+  document.getElementById('checkout-modal').classList.remove('open');
+}
+
+async function submitCheckout(){
+  const name=document.getElementById('coName');
+  const email=document.getElementById('coEmail');
+  const phone=document.getElementById('coPhone');
+  [name,email].forEach(f=>{f.classList.remove('error');f.nextElementSibling.classList.remove('show');});
+  let ok=true;
+  if(!name.value.trim()||name.value.trim().length<2){name.classList.add('error');document.getElementById('coNameErr').classList.add('show');ok=false;}
+  if(!email.value.trim()||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){email.classList.add('error');document.getElementById('coEmailErr').classList.add('show');ok=false;}
+  if(!cart.length)ok=false;
+  if(!ok)return;
+  const btn=document.getElementById('checkoutSubmitBtn'); const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='Sending...';
+  try{
+    const res=await fetch(API_BASE+'/api/public/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      name:name.value.trim(),
+      email:email.value.trim(),
+      phone:phone.value.trim(),
+      service:'Product Order',
+      message:buildOrderMessage()
+    })});
+    if(!res.ok)throw new Error('Could not send order');
+    document.getElementById('checkoutFormBlock').style.display='none';
+    document.getElementById('checkoutSuccess').style.display='block';
+    cart=[];
+    updateCartUI();
+    toggleCart();
+  }catch(e){
+    alert('Your order could not be sent right now. Please try again or contact us via WhatsApp or phone.');
+  }finally{
+    btn.disabled=false; btn.innerHTML=old;
+  }
+}
 
 function showToast(msg){
   const t=document.getElementById('cart-toast');
