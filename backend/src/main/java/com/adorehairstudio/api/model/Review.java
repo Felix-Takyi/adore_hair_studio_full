@@ -6,7 +6,8 @@ import java.time.Instant;
 @Entity
 public class Review {
   @Id @GeneratedValue(strategy=GenerationType.IDENTITY) private Long id;
-  @NotNull private Long productId;
+  @Column(nullable = false)
+  private Long productId;
   @NotBlank @Column(length=120) private String customerName;
   @Min(1) @Max(5) private int rating=5;
   @NotBlank @Column(length=2000) private String comment;
