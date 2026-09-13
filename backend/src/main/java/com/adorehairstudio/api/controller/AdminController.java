@@ -2,12 +2,14 @@ package com.adorehairstudio.api.controller;
 
 import com.adorehairstudio.api.model.ContactMessage;
 import com.adorehairstudio.api.model.Product;
+import com.adorehairstudio.api.model.Review;
 import com.adorehairstudio.api.model.ServiceItem;
 import com.adorehairstudio.api.model.SiteSettings;
 import com.adorehairstudio.api.model.Testimonial;
 
 import com.adorehairstudio.api.repo.ContactMessageRepository;
 import com.adorehairstudio.api.repo.ProductRepository;
+import com.adorehairstudio.api.repo.ReviewRepository;
 import com.adorehairstudio.api.repo.ServiceItemRepository;
 import com.adorehairstudio.api.repo.SiteSettingsRepository;
 import com.adorehairstudio.api.repo.TestimonialRepository;
@@ -30,6 +32,7 @@ public class AdminController {
     private final TestimonialRepository testimonialRepository;
     private final ContactMessageRepository messageRepository;
     private final SiteSettingsRepository settingsRepository;
+    private final ReviewRepository reviewRepository;
 
 
     public AdminController(
@@ -37,13 +40,15 @@ public class AdminController {
             ServiceItemRepository serviceRepository,
             TestimonialRepository testimonialRepository,
             ContactMessageRepository messageRepository,
-            SiteSettingsRepository settingsRepository
+            SiteSettingsRepository settingsRepository,
+            ReviewRepository reviewRepository
     ) {
         this.productRepository = productRepository;
         this.serviceRepository = serviceRepository;
         this.testimonialRepository = testimonialRepository;
         this.messageRepository = messageRepository;
         this.settingsRepository = settingsRepository;
+        this.reviewRepository = reviewRepository;
     }
 
 
@@ -264,6 +269,31 @@ public class AdminController {
         }
 
         messageRepository.deleteById(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+
+    // =========================================================
+    // PRODUCT REVIEWS
+    // =========================================================
+
+    @GetMapping("/reviews")
+    public List<Review> reviews() {
+        return reviewRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable Long id
+    ) {
+
+        if (!reviewRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        reviewRepository.deleteById(id);
 
         return ResponseEntity.noContent().build();
     }

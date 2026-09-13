@@ -966,6 +966,11 @@
                 Testimonials
             </button>
 
+            <button data-tab="reviews">
+                <span class="tab-icon"><i class="fa-solid fa-star-half-stroke"></i></span>
+                Reviews
+            </button>
+
             <button data-tab="messages">
                 <span class="tab-icon"><i class="fa-solid fa-envelope"></i></span>
                 Messages
@@ -1220,12 +1225,14 @@
                     products,
                     services,
                     testimonials,
-                    messages
+                    messages,
+                    reviews
                 ] = await Promise.all([
                     api('/api/admin/products'),
                     api('/api/admin/services'),
                     api('/api/admin/testimonials'),
-                    api('/api/admin/messages')
+                    api('/api/admin/messages'),
+                    api('/api/admin/reviews')
                 ]);
 
                 updateMessageBadge(messages);
@@ -1234,7 +1241,8 @@
                     products,
                     services,
                     testimonials,
-                    messages
+                    messages,
+                    reviews
                 });
             }
 
@@ -1254,6 +1262,15 @@
                 renderTestimonials(
                     await api('/api/admin/testimonials')
                 );
+            }
+
+            if (tab === 'reviews') {
+                const [reviews, products] = await Promise.all([
+                    api('/api/admin/reviews'),
+                    api('/api/admin/products')
+                ]);
+
+                renderReviews(reviews, products);
             }
 
             if (tab === 'messages') {
@@ -1326,7 +1343,7 @@
        DASHBOARD
     ========================================================= */
 
-    function renderDashboard({ products, services, testimonials, messages }) {
+    function renderDashboard({ products, services, testimonials, messages, reviews }) {
 
         const content =
             document.getElementById('content');
@@ -1336,6 +1353,8 @@
 
         const activeProducts =
             products.filter(p => p.active !== false).length;
+
+        reviews = reviews || [];
 
         const hour =
             new Date().getHours();
@@ -1387,6 +1406,16 @@
                     <div>
                         <div class="stat-number">${testimonials.length}</div>
                         <div class="stat-label">Client testimonials</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="goTab('reviews')">
+                    <div class="stat-icon pink">
+                        <i class="fa-solid fa-star-half-stroke"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number">${reviews.length}</div>
+                        <div class="stat-label">Product reviews</div>
                     </div>
                 </div>
 
@@ -2680,6 +2709,86 @@
 
 
         load();
+    }
+
+
+    /* =========================================================
+       PRODUCT REVIEWS
+    ========================================================= */
+
+    function renderReviews(xs, products) {
+
+        const content =
+            document.getElementById('content');
+
+        const productName = id =>
+            (products || []).find(p => p.id === id)?.name
+                || `Product #${id}`;
+
+        content.innerHTML = `
+
+            <div class="section-head">
+                <div>
+                    <h2><i class="fa-solid fa-star-half-stroke" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>Product Reviews</h2>
+                    <p>
+                        ${xs.length} review${xs.length === 1 ? '' : 's'} from customers across all products.
+                    </p>
+                </div>
+            </div>
+
+            ${
+                xs.length
+                    ? ''
+                    : `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-comment-dots"></i>
+                            No product reviews yet.
+                        </div>
+                    `
+            }
+
+            ${xs.map(x => `
+
+                <div class="msg-item">
+
+                    <div class="msg-avatar">${esc(initials(x.customerName))}</div>
+
+                    <div class="msg-content">
+
+                        <div class="msg-top">
+                            <div>
+                                <span class="msg-name">${esc(x.customerName)}</span>
+                                <span class="msg-email">— ${esc(productName(x.productId))}</span>
+                            </div>
+                            <span class="msg-date">
+                                ${x.createdAt ? new Date(x.createdAt).toLocaleString() : ''}
+                            </span>
+                        </div>
+
+                        <div class="item-meta" style="margin-top:6px;">
+                            <span class="pill gold">${starIcons(x.rating)}</span>
+                        </div>
+
+                        <p class="msg-text">${esc(x.comment)}</p>
+
+                        <div class="actions" style="margin-top:10px;">
+
+                            <button
+                                class="btn danger small"
+                                onclick="del('reviews', ${x.id})">
+                                <i class="fa-solid fa-trash"></i>
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `).join('')}
+
+        `;
     }
 
 

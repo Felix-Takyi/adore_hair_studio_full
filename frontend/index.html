@@ -279,6 +279,72 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
 .checkout-summary-row span:last-child{color:var(--gray)}
 .checkout-summary-total{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid rgba(0,0,0,0.1);margin-top:0.6rem;padding-top:0.6rem;font-size:0.95rem}
 .checkout-note{font-size:0.75rem;color:var(--gray);margin-top:0.8rem;line-height:1.5}
+
+/* PRODUCT DETAIL MODAL */
+#product-overlay{position:fixed;inset:0;z-index:1300;background:rgba(8,8,8,0.72);opacity:0;pointer-events:none;transition:opacity var(--t)}
+#product-overlay.open{opacity:1;pointer-events:all}
+#product-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-48%) scale(0.96);z-index:1301;width:92%;max-width:960px;max-height:88vh;overflow-y:auto;background:var(--white);border-radius:22px;opacity:0;pointer-events:none;transition:opacity 0.35s var(--ease),transform 0.35s var(--ease);box-shadow:0 30px 80px rgba(0,0,0,0.35)}
+#product-modal.open{opacity:1;pointer-events:all;transform:translate(-50%,-50%) scale(1)}
+.pm-close{position:sticky;top:1rem;float:right;margin-right:1rem;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.95);border:none;display:flex;align-items:center;justify-content:center;color:var(--black);font-size:1rem;box-shadow:0 4px 14px rgba(0,0,0,0.18);z-index:5;transition:transform var(--t),background var(--t)}
+.pm-close:hover{background:var(--gold);transform:rotate(90deg)}
+.pm-body{display:grid;grid-template-columns:1fr 1fr;clear:both}
+.pm-media{position:relative;background:var(--cream)}
+.pm-media img{width:100%;height:100%;min-height:380px;object-fit:cover;display:block}
+.pm-badge{position:absolute;top:1.2rem;left:1.2rem;background:var(--gold);color:var(--black);font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.4rem 0.9rem;border-radius:30px}
+.pm-info{padding:1.2rem 2.6rem 2.2rem}
+.pm-cat{font-size:0.72rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem}
+.pm-name{font-family:var(--serif);font-size:1.75rem;font-weight:700;line-height:1.22;margin-bottom:0.7rem}
+.pm-rating-row{display:flex;align-items:center;gap:0.6rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.pm-stars{color:var(--gold);font-size:0.95rem;letter-spacing:2px}
+.pm-rating-text{font-size:0.82rem;color:var(--gray)}
+.pm-price-row{display:flex;align-items:baseline;gap:0.8rem;margin-bottom:1.3rem}
+.pm-price{font-family:var(--serif);font-size:1.65rem;font-weight:700;color:var(--black)}
+.pm-old{font-size:0.95rem;color:var(--gray);text-decoration:line-through}
+.pm-desc{color:#555;font-size:0.94rem;line-height:1.75;margin-bottom:1.8rem}
+.pm-actions{display:flex;gap:0.8rem}
+.pm-cart-btn{flex:1;background:var(--black);color:var(--white);border:none;border-radius:12px;padding:1rem;font-size:0.78rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;transition:all var(--t);display:flex;align-items:center;justify-content:center;gap:0.55rem}
+.pm-cart-btn:hover{background:var(--gold);color:var(--black)}
+.pm-wish-btn2{width:52px;height:52px;flex-shrink:0;border-radius:12px;border:1.5px solid rgba(0,0,0,0.1);background:none;color:#d48aaa;font-size:1.05rem;display:flex;align-items:center;justify-content:center;transition:all var(--t)}
+.pm-wish-btn2:hover{border-color:#d48aaa;background:var(--blush)}
+.pm-reviews{padding:2rem 2.6rem 2.6rem;border-top:1px solid rgba(0,0,0,0.07)}
+.pm-reviews-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.4rem}
+.pm-reviews-head h3{font-family:var(--serif);font-size:1.22rem}
+.pm-reviews-head h3 span{color:var(--gray);font-size:0.82rem;font-family:var(--sans);font-weight:400}
+.pm-write-btn{background:none;border:1.5px solid var(--gold);color:#a5822f;border-radius:30px;padding:0.6rem 1.3rem;font-size:0.75rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:0.5rem;transition:all var(--t)}
+.pm-write-btn:hover{background:var(--gold);color:var(--black)}
+.pm-review-form{background:var(--cream);border-radius:16px;padding:1.6rem;margin-bottom:1.8rem;animation:fadeUp 0.35s var(--ease)}
+.pm-review-form-label{font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray);margin-bottom:0.6rem}
+.pm-star-picker{display:flex;gap:0.4rem;margin-bottom:1.2rem;font-size:1.55rem}
+.pm-star-picker i{color:#d8d0c0;cursor:pointer;transition:color 0.15s,transform 0.15s}
+.pm-star-picker i.active{color:var(--gold)}
+.pm-star-picker i:hover{transform:scale(1.15)}
+.pm-form-err{font-size:0.8rem;color:#e05252;margin-bottom:0.6rem;display:none}
+.pm-form-err.show{display:block}
+.pm-form-actions{display:flex;gap:0.8rem;justify-content:flex-end;margin-top:0.4rem}
+.pm-cancel-btn{background:none;border:none;color:var(--gray);font-size:0.82rem;font-weight:600;padding:0.85rem 1.2rem}
+.pm-submit-btn{background:var(--gold);color:var(--black);border:none;border-radius:10px;padding:0.85rem 1.7rem;font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;transition:all var(--t)}
+.pm-submit-btn:hover{background:var(--gold-lt)}
+.pm-submit-btn:disabled{opacity:0.6;cursor:not-allowed}
+.pm-review-list{display:flex;flex-direction:column;gap:1.3rem}
+.pm-review-item{padding-bottom:1.3rem;border-bottom:1px solid rgba(0,0,0,0.06);animation:fadeUp 0.4s var(--ease)}
+.pm-review-item:last-child{border-bottom:none;padding-bottom:0}
+.pm-review-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.5rem;gap:0.6rem}
+.pm-review-user{display:flex;align-items:center;gap:0.7rem;min-width:0}
+.pm-review-avatar{width:36px;height:36px;flex-shrink:0;border-radius:50%;background:var(--gold);color:var(--black);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700}
+.pm-review-name-wrap{min-width:0}
+.pm-review-name{font-size:0.88rem;font-weight:600;display:block}
+.pm-review-date{font-size:0.74rem;color:var(--gray)}
+.pm-review-stars{color:var(--gold);font-size:0.78rem;letter-spacing:1px;white-space:nowrap;flex-shrink:0}
+.pm-review-text{font-size:0.88rem;color:#555;line-height:1.65}
+.pm-reviews-empty,.pm-reviews-loading{text-align:center;color:var(--gray);padding:2.2rem 1rem;font-size:0.9rem}
+.pm-reviews-empty i,.pm-reviews-loading i{display:block;font-size:1.6rem;margin-bottom:0.7rem;color:var(--pink-md);opacity:0.6}
+@media(max-width:800px){
+  .pm-body{grid-template-columns:1fr}
+  .pm-media img{min-height:260px}
+  .pm-info{padding:1rem 1.6rem 0.4rem}
+  .pm-reviews{padding:1.6rem}
+  .pm-name{font-size:1.5rem}
+}
 #cart-toast{position:fixed;bottom:2rem;right:2rem;z-index:9999;background:var(--black);color:var(--gold);border:1px solid rgba(201,168,76,0.3);border-radius:12px;padding:1rem 1.5rem;font-size:0.85rem;font-weight:500;display:flex;align-items:center;gap:0.7rem;transform:translateY(80px);opacity:0;transition:all 0.4s var(--ease);box-shadow:0 10px 40px rgba(0,0,0,0.3)}
 #cart-toast.show{transform:translateY(0);opacity:1}
 
@@ -639,6 +705,58 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
   </div>
 </div>
 
+<!-- PRODUCT DETAIL MODAL -->
+<div id="product-overlay" onclick="closeProductModal()"></div>
+<div id="product-modal">
+  <button class="pm-close" onclick="closeProductModal()" title="Close"><i class="fa fa-times"></i></button>
+  <div class="pm-body">
+    <div class="pm-media">
+      <img id="pmImg" src="" alt="">
+      <span class="pm-badge" id="pmBadge" style="display:none"></span>
+    </div>
+    <div class="pm-info">
+      <div class="pm-cat" id="pmCat"></div>
+      <h2 class="pm-name" id="pmName"></h2>
+      <div class="pm-rating-row">
+        <span class="pm-stars" id="pmStars"></span>
+        <span class="pm-rating-text" id="pmRatingText"></span>
+      </div>
+      <div class="pm-price-row">
+        <span class="pm-price" id="pmPrice"></span>
+        <span class="pm-old" id="pmOld"></span>
+      </div>
+      <p class="pm-desc" id="pmDesc"></p>
+      <div class="pm-actions">
+        <button class="pm-cart-btn" id="pmCartBtn"><i class="fa fa-shopping-bag"></i>Add to Cart</button>
+        <button class="pm-wish-btn2" title="Save for later"><i class="fa fa-heart"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pm-reviews">
+    <div class="pm-reviews-head">
+      <h3>Customer Reviews <span id="pmReviewCount"></span></h3>
+      <button class="pm-write-btn" onclick="toggleReviewForm()"><i class="fa fa-pen"></i>Write a Review</button>
+    </div>
+
+    <div class="pm-review-form" id="pmReviewForm" style="display:none">
+      <div class="pm-review-form-label">Your Rating</div>
+      <div class="pm-star-picker" id="pmStarPicker">
+        <i class="fa fa-star" data-v="1"></i><i class="fa fa-star" data-v="2"></i><i class="fa fa-star" data-v="3"></i><i class="fa fa-star" data-v="4"></i><i class="fa fa-star" data-v="5"></i>
+      </div>
+      <div class="form-row"><input type="text" id="pmRevName" placeholder="Your name" maxlength="80"></div>
+      <div class="form-row" style="margin-bottom:0.4rem"><textarea id="pmRevComment" rows="3" placeholder="Share your experience with this product..." maxlength="2000"></textarea></div>
+      <div class="pm-form-err" id="pmRevErr"></div>
+      <div class="pm-form-actions">
+        <button class="pm-cancel-btn" onclick="toggleReviewForm(false)">Cancel</button>
+        <button class="pm-submit-btn" id="pmRevSubmitBtn" onclick="submitProductReview()">Submit Review</button>
+      </div>
+    </div>
+
+    <div class="pm-review-list" id="pmReviewList"></div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script>
 let PRODUCTS=[];
@@ -659,7 +777,8 @@ function renderProducts(filter='all'){
     const div=document.createElement('div');
     div.className='prod-card reveal';
     div.style.animationDelay=i*0.07+'s';
-    div.innerHTML=`<div class="prod-img"><img src="${p.img}" alt="${p.name}" loading="lazy">${p.tag?`<span class="prod-badge">${p.tag}</span>`:''}<button class="wish-btn"><i class="fa fa-heart"></i></button></div><div class="prod-info"><div class="prod-stars">${stars}</div><div class="prod-name">${p.name}</div><div class="prod-desc">${p.desc}</div><div class="prod-foot"><div class="prod-price">GH&#8373; ${Number(p.price).toLocaleString()} <small>/ unit</small></div><button class="cart-btn" onclick="addToCart(${p.id})">Add to Cart</button></div></div>`;
+    div.onclick=()=>openProductModal(p.id);
+    div.innerHTML=`<div class="prod-img"><img src="${p.img}" alt="${p.name}" loading="lazy">${p.tag?`<span class="prod-badge">${p.tag}</span>`:''}<button class="wish-btn" onclick="event.stopPropagation()"><i class="fa fa-heart"></i></button></div><div class="prod-info"><div class="prod-stars">${stars}</div><div class="prod-name">${p.name}</div><div class="prod-desc">${p.desc}</div><div class="prod-foot"><div class="prod-price">GH&#8373; ${Number(p.price).toLocaleString()} <small>/ unit</small></div><button class="cart-btn" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button></div></div>`;
     grid.appendChild(div);
   });
   initReveal();
@@ -683,7 +802,7 @@ function renderFeatured(){
     const div=document.createElement('div');
     div.className='feat-card reveal';
     div.style.animationDelay=i*0.12+'s';
-    div.innerHTML=`<div class="feat-img"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="feat-ribbon">${p.tag}</div></div><div class="feat-body"><div class="feat-stars">${stars}</div><div class="feat-name">${p.name}</div><div class="feat-desc">${p.desc}</div><div class="feat-price-row"><span class="feat-price">GH&#8373; ${Number(p.price).toLocaleString()}</span>${p.oldPrice?`<span class="feat-old">GH&#8373; ${Number(p.oldPrice).toLocaleString()}</span>`:''}</div><div class="feat-actions"><button class="feat-cart" onclick="addToCart(${p.id})"><i class="fa fa-shopping-bag" style="margin-right:0.4rem"></i>Add to Cart</button><button class="feat-details" onclick="showToast('Full details coming soon!')"><i class="fa fa-eye" style="margin-right:0.4rem"></i>View</button></div></div>`;
+    div.innerHTML=`<div class="feat-img"><img src="${p.img}" alt="${p.name}" loading="lazy"><div class="feat-ribbon">${p.tag}</div></div><div class="feat-body"><div class="feat-stars">${stars}</div><div class="feat-name">${p.name}</div><div class="feat-desc">${p.desc}</div><div class="feat-price-row"><span class="feat-price">GH&#8373; ${Number(p.price).toLocaleString()}</span>${p.oldPrice?`<span class="feat-old">GH&#8373; ${Number(p.oldPrice).toLocaleString()}</span>`:''}</div><div class="feat-actions"><button class="feat-cart" onclick="addToCart(${p.id})"><i class="fa fa-shopping-bag" style="margin-right:0.4rem"></i>Add to Cart</button><button class="feat-details" onclick="openProductModal(${p.id})"><i class="fa fa-eye" style="margin-right:0.4rem"></i>View</button></div></div>`;
     g.appendChild(div);
   });
 }
@@ -793,6 +912,155 @@ async function submitCheckout(){
     alert('Your order could not be sent right now. Please try again or contact us via WhatsApp or phone.');
   }finally{
     btn.disabled=false; btn.innerHTML=old;
+  }
+}
+
+/* PRODUCT DETAIL MODAL */
+let pmProduct=null;
+let pmReviews=[];
+let pmSelectedRating=0;
+
+function openProductModal(id){
+  const all=[...PRODUCTS,...FEATURED];
+  const p=all.find(x=>x.id===id);
+  if(!p)return;
+  pmProduct=p;
+  document.getElementById('pmImg').src=p.img;
+  document.getElementById('pmImg').alt=p.name;
+  const badge=document.getElementById('pmBadge');
+  if(p.tag){badge.textContent=p.tag;badge.style.display='inline-block';}else{badge.style.display='none';}
+  document.getElementById('pmCat').textContent=p.cat?String(p.cat).replace(/-/g,' '):'Adore Hair Studio';
+  document.getElementById('pmName').textContent=p.name;
+  document.getElementById('pmDesc').textContent=p.desc||'';
+  document.getElementById('pmPrice').textContent='GH\u20B5 '+Number(p.price).toLocaleString();
+  const oldEl=document.getElementById('pmOld');
+  if(p.oldPrice){oldEl.textContent='GH\u20B5 '+Number(p.oldPrice).toLocaleString();oldEl.style.display='inline';}else{oldEl.style.display='none';}
+  document.getElementById('pmCartBtn').onclick=()=>{addToCart(p.id);};
+  toggleReviewForm(false);
+  document.getElementById('pmRevErr').classList.remove('show');
+  document.getElementById('pmReviewList').innerHTML='<div class="pm-reviews-loading"><i class="fa fa-circle-notch fa-spin"></i>Loading reviews…</div>';
+  document.getElementById('pmReviewCount').textContent='';
+  updatePmRatingSummary();
+  document.getElementById('product-overlay').classList.add('open');
+  document.getElementById('product-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+  loadProductReviews(id);
+}
+
+function closeProductModal(){
+  document.getElementById('product-overlay').classList.remove('open');
+  document.getElementById('product-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.getElementById('product-modal').classList.contains('open'))closeProductModal();
+});
+
+async function loadProductReviews(id){
+  try{
+    const res=await fetch(API_BASE+'/api/public/products/'+id+'/reviews');
+    if(!res.ok)throw new Error('Could not load reviews');
+    pmReviews=await res.json();
+  }catch(e){
+    pmReviews=[];
+  }
+  if(pmProduct&&pmProduct.id===id){renderPmReviews();updatePmRatingSummary();}
+}
+
+function updatePmRatingSummary(){
+  const starsEl=document.getElementById('pmStars');
+  const textEl=document.getElementById('pmRatingText');
+  if(pmReviews.length){
+    const avg=pmReviews.reduce((a,r)=>a+Number(r.rating),0)/pmReviews.length;
+    const rounded=Math.round(avg);
+    starsEl.textContent='★'.repeat(rounded)+'☆'.repeat(5-rounded);
+    textEl.textContent=avg.toFixed(1)+' ('+pmReviews.length+' review'+(pmReviews.length===1?'':'s')+')';
+  }else{
+    const base=pmProduct?Number(pmProduct.stars)||0:0;
+    starsEl.textContent='★'.repeat(base)+'☆'.repeat(5-base);
+    textEl.textContent='No reviews yet';
+  }
+}
+
+function renderPmReviews(){
+  const list=document.getElementById('pmReviewList');
+  const countEl=document.getElementById('pmReviewCount');
+  countEl.textContent=pmReviews.length?'('+pmReviews.length+')':'';
+  if(!pmReviews.length){
+    list.innerHTML='<div class="pm-reviews-empty"><i class="fa fa-comment-dots"></i>No reviews yet. Be the first to share your experience!</div>';
+    return;
+  }
+  list.innerHTML=pmReviews.map(r=>{
+    const rStars='★'.repeat(Number(r.rating))+'☆'.repeat(5-Number(r.rating));
+    const initials=String(r.customerName||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');
+    const date=r.createdAt?new Date(r.createdAt).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'';
+    return `<div class="pm-review-item"><div class="pm-review-top"><div class="pm-review-user"><div class="pm-review-avatar">${esc(initials)}</div><div class="pm-review-name-wrap"><span class="pm-review-name">${esc(r.customerName)}</span><span class="pm-review-date">${date}</span></div></div><div class="pm-review-stars">${rStars}</div></div><p class="pm-review-text">${esc(r.comment)}</p></div>`;
+  }).join('');
+}
+
+function esc(s){
+  return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function toggleReviewForm(show){
+  const form=document.getElementById('pmReviewForm');
+  const willShow=typeof show==='boolean'?show:form.style.display==='none';
+  form.style.display=willShow?'block':'none';
+  if(willShow){
+    pmSelectedRating=0;
+    document.getElementById('pmRevName').value='';
+    document.getElementById('pmRevComment').value='';
+    document.getElementById('pmRevErr').classList.remove('show');
+    updateStarPicker();
+    setTimeout(()=>document.getElementById('pmRevName').focus(),50);
+  }
+}
+
+document.getElementById('pmStarPicker').addEventListener('click',e=>{
+  const star=e.target.closest('i[data-v]');
+  if(!star)return;
+  pmSelectedRating=Number(star.dataset.v);
+  updateStarPicker();
+});
+
+function updateStarPicker(){
+  document.querySelectorAll('#pmStarPicker i').forEach(i=>{
+    i.classList.toggle('active',Number(i.dataset.v)<=pmSelectedRating);
+  });
+}
+
+async function submitProductReview(){
+  const nameEl=document.getElementById('pmRevName');
+  const commentEl=document.getElementById('pmRevComment');
+  const errEl=document.getElementById('pmRevErr');
+  errEl.classList.remove('show');
+  const name=nameEl.value.trim();
+  const comment=commentEl.value.trim();
+  if(!name||name.length<2){errEl.textContent='Please enter your name.';errEl.classList.add('show');return;}
+  if(!pmSelectedRating){errEl.textContent='Please select a star rating.';errEl.classList.add('show');return;}
+  if(!comment||comment.length<5){errEl.textContent='Please share a few words about the product.';errEl.classList.add('show');return;}
+  const btn=document.getElementById('pmRevSubmitBtn');
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent='Submitting...';
+  try{
+    const res=await fetch(API_BASE+'/api/public/products/'+pmProduct.id+'/reviews',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customerName:name,rating:pmSelectedRating,comment:comment})
+    });
+    if(!res.ok)throw new Error('Could not submit review');
+    const saved=await res.json();
+    pmReviews.unshift(saved);
+    renderPmReviews();
+    updatePmRatingSummary();
+    toggleReviewForm(false);
+    showToast('Thank you for your review!');
+  }catch(e){
+    errEl.textContent='Your review could not be submitted right now. Please try again.';
+    errEl.classList.add('show');
+  }finally{
+    btn.disabled=false;btn.textContent=old;
   }
 }
 
