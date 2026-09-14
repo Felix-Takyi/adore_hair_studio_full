@@ -2,6 +2,8 @@ package com.adorehairstudio.api.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 @Entity
 public class Product {
@@ -12,6 +14,11 @@ public class Product {
   private BigDecimal oldPrice;
   private String tag;
   private String imageUrl;
+  @ElementCollection(fetch=FetchType.EAGER)
+  @CollectionTable(name="product_images",joinColumns=@JoinColumn(name="product_id"))
+  @OrderColumn(name="image_order")
+  @Column(name="image_url")
+  private List<String> imageUrls=new ArrayList<>();
   private String category;
   private String productType;
   @Min(0) @Max(5) private int stars=5;
@@ -25,6 +32,14 @@ public class Product {
   public BigDecimal getOldPrice(){return oldPrice;} public void setOldPrice(BigDecimal v){oldPrice=v;}
   public String getTag(){return tag;} public void setTag(String v){tag=v;}
   public String getImageUrl(){return imageUrl;} public void setImageUrl(String v){imageUrl=v;}
+  public List<String> getImageUrls(){
+    if((imageUrls==null||imageUrls.isEmpty())&&imageUrl!=null&&!imageUrl.isBlank())return List.of(imageUrl);
+    return imageUrls;
+  }
+  public void setImageUrls(List<String> values){
+    imageUrls=values==null?new ArrayList<>():values.stream().filter(v->v!=null&&!v.isBlank()).distinct().collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+    if(!imageUrls.isEmpty())imageUrl=imageUrls.get(0);
+  }
   public String getCategory(){return category;} public void setCategory(String v){category=v;}
   public String getProductType(){
     if(productType!=null&&!productType.isBlank())return "WIG".equalsIgnoreCase(productType)?"WIG":"OTHER";

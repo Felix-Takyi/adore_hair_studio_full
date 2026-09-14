@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
+
 class ProductTest {
 
     @Test
@@ -30,5 +32,14 @@ class ProductTest {
 
         product.setProductType("accessory");
         assertEquals("OTHER", product.getProductType());
+    }
+
+    @Test
+    void keepsTheFirstGalleryImageAsThePrimaryImage() {
+        Product product = new Product();
+        product.setImageUrls(List.of("first.jpg", "second.jpg", "first.jpg"));
+
+        assertEquals("first.jpg", product.getImageUrl());
+        assertEquals(List.of("first.jpg", "second.jpg"), product.getImageUrls());
     }
 }

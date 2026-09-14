@@ -871,14 +871,42 @@
 
         /* ---------- IMAGE UPLOAD ---------- */
 
-        .image-preview img {
-            max-width: 180px;
-            max-height: 180px;
-            object-fit: cover;
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
             margin-top: 12px;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border: 2px solid var(--line);
             border-radius: 12px;
-            border: 1px solid var(--line);
-            box-shadow: 0 6px 16px rgba(0,0,0,.08);
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .image-preview-item.primary { border-color: var(--gold); }
+
+        .image-preview img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+        }
+
+        .image-preview-actions {
+            display: flex;
+            gap: 5px;
+            padding: 7px;
+        }
+
+        .image-preview-actions button {
+            flex: 1;
+            border: 0;
+            border-radius: 7px;
+            padding: 6px;
+            font-size: 10px;
+            cursor: pointer;
         }
 
         .upload-status {
@@ -1095,6 +1123,7 @@
     let tab = 'dashboard';
     let allProductsCache = [];
     let productSearchQuery = '';
+    let pendingProductImages = [];
 
 
    const api = async (path, opt = {}) => {
@@ -1701,6 +1730,11 @@
 
     function productForm(x = {}) {
 
+        pendingProductImages = [...new Set([
+            ...(x.imageUrls || []),
+            x.imageUrl
+        ].filter(Boolean))];
+
         const form =
             document.getElementById('form');
 
@@ -1819,47 +1853,31 @@
 
                 <label>
 
-                    Product Image
+                    Product Images
 
                     <input
                         id="pfile"
                         type="file"
+                        multiple
                         accept="image/jpeg,image/png,image/webp">
 
                 </label>
 
 
-                <input
-                    id="pimg"
-                    type="hidden"
-                    value="${esc(x.imageUrl || '')}">
-
-
                 <div
                     id="imagePreview"
                     class="image-preview">
-
-                    ${
-                        x.imageUrl
-                            ? `
-                                <img
-                                    src="${esc(x.imageUrl)}"
-                                    alt="Product image">
-                              `
-                            : ''
-                    }
-
                 </div>
 
 
                 <button
                     type="button"
                     class="btn secondary"
-                    onclick="uploadProductImage()"
+                    onclick="uploadProductImages()"
                     style="margin-top:10px">
 
                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                    Upload Image
+                    Upload Selected Images
 
                 </button>
 
@@ -1876,6 +1894,11 @@
                 <label>
 
                     Description
+
+                    <button type="button" class="btn secondary small" onclick="generateProductDescription()" style="margin:0 0 8px 8px">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        Auto-generate
+                    </button>
 
                     <textarea
                         id="pdesc"
@@ -1932,6 +1955,7 @@
         `;
 
         updateProductCategoryOptions(x.category || '');
+        renderPendingProductImages();
     }
 
 
@@ -1962,160 +1986,77 @@
     }
 
 
-    async function uploadProductImage() {
+    function renderPendingProductImages() {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = pendingProductImages.map((url, index) => `
+            <div class="image-preview-item ${index === 0 ? 'primary' : ''}">
+                <img src="${esc(url)}" alt="Product image ${index + 1}">
+                <div class="image-preview-actions">
+                    <button type="button" onclick="makePrimaryImage(${index})">${index === 0 ? 'Primary' : 'Make primary'}</button>
+                    <button type="button" onclick="removeProductImage(${index})">Remove</button>
+                </div>
+            </div>
+        `).join('');
+    }
 
-        const input =
-            document.getElementById('pfile');
+    function makePrimaryImage(index) {
+        const [image] = pendingProductImages.splice(index, 1);
+        pendingProductImages.unshift(image);
+        renderPendingProductImages();
+    }
 
-        const file =
-            input.files[0];
+    function removeProductImage(index) {
+        pendingProductImages.splice(index, 1);
+        renderPendingProductImages();
+    }
 
-        const status =
-            document.getElementById(
-                'uploadStatus'
-            );
+    async function uploadProductImages() {
+        const files = [...document.getElementById('pfile').files];
+        const status = document.getElementById('uploadStatus');
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const maxSize = 10 * 1024 * 1024;
 
+        if (!files.length) { alert('Choose one or more images first.'); return; }
+        if (files.some(file => !allowedTypes.includes(file.type))) { alert('Only JPG, PNG and WEBP images are allowed.'); return; }
+        if (files.some(file => file.size > maxSize)) { alert('Each image must be 10MB or smaller.'); return; }
 
-        if (!file) {
-
-            alert('Choose an image first.');
-
-            return;
-        }
-
-
-        const allowedTypes = [
-            'image/jpeg',
-            'image/png',
-            'image/webp'
-        ];
-
-
-        if (!allowedTypes.includes(file.type)) {
-
-            alert(
-                'Only JPG, PNG and WEBP images are allowed.'
-            );
-
-            return;
-        }
-
-
-        const maxSize =
-            10 * 1024 * 1024;
-
-
-        if (file.size > maxSize) {
-
-            alert(
-                'Image is too large. Maximum size is 10MB.'
-            );
-
-            return;
-        }
-
-
-        status.textContent =
-            'Uploading...';
-
-
-        const formData =
-            new FormData();
-
-
-        formData.append(
-            'file',
-            file
-        );
-
-
+        status.textContent = `Uploading 0 of ${files.length}...`;
         try {
-
-            const res =
-                await fetch(
-                    '/api/admin/images/upload',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            Authorization:
-                                'Bearer ' + token
-                        },
-
-                        body: formData
-                    }
-                );
-
-
-            if (res.status === 401) {
-
-                logout();
-
-                throw new Error(
-                    'Session expired'
-                );
+            for (let index = 0; index < files.length; index++) {
+                const formData = new FormData();
+                formData.append('file', files[index]);
+                const res = await fetch('/api/admin/images/upload', {
+                    method: 'POST',
+                    headers: {Authorization: 'Bearer ' + token},
+                    body: formData
+                });
+                if (res.status === 401) { logout(); throw new Error('Session expired'); }
+                if (!res.ok) throw new Error(await res.text());
+                const result = await res.json();
+                if (!result.url) throw new Error('No image URL was returned.');
+                if (!pendingProductImages.includes(result.url)) pendingProductImages.push(result.url);
+                status.textContent = `Uploading ${index + 1} of ${files.length}...`;
+                renderPendingProductImages();
             }
-
-
-            if (!res.ok) {
-
-                throw new Error(
-                    await res.text()
-                );
-            }
-
-
-            const result =
-                await res.json();
-
-
-            if (!result.url) {
-
-                throw new Error(
-                    'Upload completed but no image URL was returned.'
-                );
-            }
-
-
-            document
-                .getElementById('pimg')
-                .value =
-                result.url;
-
-
-            document
-                .getElementById(
-                    'imagePreview'
-                )
-                .innerHTML = `
-
-                    <img
-                        src="${esc(result.url)}"
-                        alt="Uploaded product image">
-
-                `;
-
-
-            status.textContent =
-                '✓ Uploaded successfully';
-
-
+            status.textContent = `✓ ${files.length} image${files.length === 1 ? '' : 's'} uploaded`;
+            document.getElementById('pfile').value = '';
         } catch (e) {
-
-            console.error(
-                'Image upload failed:',
-                e
-            );
-
-
-            status.textContent =
-                'Upload failed';
-
-
-            alert(
-                'Image upload failed. Check the browser console or server logs.'
-            );
+            console.error('Image upload failed:', e);
+            status.textContent = 'Upload failed';
+            alert('One or more images could not be uploaded. Images completed before the error are still available.');
         }
+    }
+
+    function generateProductDescription() {
+        const name = document.getElementById('pname').value.trim();
+        const type = document.getElementById('ptype').value;
+        const categorySelect = document.getElementById('pcat');
+        const category = categorySelect.options[categorySelect.selectedIndex]?.text || 'product';
+        if (!name) { alert('Enter the product name first.'); return; }
+        const description = type === 'WIG'
+            ? `${name} is a beautifully finished ${category.toLowerCase()} wig designed for a natural, confident look. It offers comfortable wear, elegant movement and versatile styling for everyday use or special occasions.`
+            : `${name} is a carefully selected ${category.toLowerCase()} product created to complement your beauty routine. It combines quality, convenience and a refined finish for dependable everyday use.`;
+        document.getElementById('pdesc').value = description;
     }
 
 
@@ -2130,9 +2071,7 @@
             document.getElementById('pprice')
                 .value;
 
-        const imageUrl =
-            document.getElementById('pimg')
-                .value;
+        const imageUrl = pendingProductImages[0] || '';
 
         const productType = document.getElementById('ptype').value;
         const category = document.getElementById('pcat').value;
@@ -2207,6 +2146,8 @@
                     .trim(),
 
             imageUrl,
+
+            imageUrls: pendingProductImages,
 
             stars:
                 Number(

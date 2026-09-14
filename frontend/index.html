@@ -33,6 +33,11 @@ nav.scrolled{background:rgba(8,8,8,0.96);backdrop-filter:blur(16px);padding:1rem
 .nav-actions{display:flex;align-items:center;gap:1.2rem}
 .nav-book{background:var(--gold);color:var(--black);border:none;border-radius:40px;padding:0.6rem 1.5rem;font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;transition:background var(--t),transform var(--t)}
 .nav-book:hover{background:var(--gold-lt);transform:translateY(-1px)}
+.nav-search{position:relative;display:flex;align-items:center;width:210px}
+.nav-search i{position:absolute;left:13px;color:var(--gold);font-size:0.8rem;pointer-events:none}
+.nav-search input{width:100%;border:1px solid rgba(201,168,76,0.4);border-radius:50px;background:rgba(255,255,255,0.09);color:var(--white);padding:0.62rem 0.9rem 0.62rem 2.15rem;font-family:var(--sans);font-size:0.75rem;outline:none}
+.nav-search input::placeholder{color:rgba(255,255,255,0.55)}
+.nav-search input:focus{border-color:var(--gold);background:rgba(255,255,255,0.14)}
 .cart-icon-wrap{position:relative;background:none;border:none;color:rgba(255,255,255,0.8);font-size:1.1rem;cursor:pointer}
 #cart-count{background:var(--gold);color:var(--black);font-size:0.6rem;font-weight:700;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;position:absolute;top:-6px;right:-8px}
 .hamburger{display:none;background:none;border:none;flex-direction:column;gap:5px;padding:4px}
@@ -292,6 +297,10 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
 .pm-body{display:grid;grid-template-columns:1fr 1fr;clear:both}
 .pm-media{position:relative;background:var(--cream)}
 .pm-media img{width:100%;height:100%;min-height:380px;object-fit:cover;display:block}
+.pm-thumbs{position:absolute;left:1rem;right:1rem;bottom:1rem;display:flex;gap:0.55rem;overflow-x:auto;padding:0.35rem;background:rgba(8,8,8,0.45);border-radius:12px;backdrop-filter:blur(8px)}
+.pm-thumb{width:62px;height:62px;flex:0 0 62px;border:2px solid transparent;border-radius:8px;overflow:hidden;padding:0;background:#fff}
+.pm-thumb.active{border-color:var(--gold)}
+.pm-thumb img{width:100%;height:100%;min-height:0;object-fit:cover}
 .pm-badge{position:absolute;top:1.2rem;left:1.2rem;background:var(--gold);color:var(--black);font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.4rem 0.9rem;border-radius:30px}
 .pm-info{padding:1.2rem 2.6rem 2.2rem}
 .pm-cat{font-size:0.72rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem}
@@ -351,10 +360,10 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
 #cart-toast.show{transform:translateY(0);opacity:1}
 
 /* RESPONSIVE */
-@media(max-width:1100px){section{padding:6rem 3rem}nav,nav.scrolled{padding:1.2rem 2.5rem}.about-inner{gap:3.5rem}.location-inner{gap:3rem}.contact-inner{gap:3rem}.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem}}
-@media(max-width:900px){.about-inner{grid-template-columns:1fr}.about-img-wrap{max-width:500px;margin:0 auto}.location-inner{grid-template-columns:1fr}.contact-inner{grid-template-columns:1fr}.nav-links,.nav-book{display:none}.hamburger{display:flex}#location{padding:5rem 2.5rem}}
+@media(max-width:1100px){section{padding:6rem 3rem}nav,nav.scrolled{padding:1.2rem 2.5rem}.nav-search{width:165px}.about-inner{gap:3.5rem}.location-inner{gap:3rem}.contact-inner{gap:3rem}.footer-top{grid-template-columns:1fr 1fr;gap:2.5rem}}
+@media(max-width:900px){.about-inner{grid-template-columns:1fr}.about-img-wrap{max-width:500px;margin:0 auto}.location-inner{grid-template-columns:1fr}.contact-inner{grid-template-columns:1fr}.nav-links,.nav-book{display:none}.nav-search{width:220px}.hamburger{display:flex}#location{padding:5rem 2.5rem}}
 @media(max-width:700px){section{padding:5rem 1.5rem}nav,nav.scrolled{padding:1rem 1.5rem}.hero-h1{font-size:clamp(2.4rem,10vw,3.5rem)}.products-grid{grid-template-columns:1fr}.services-grid{grid-template-columns:1fr 1fr}.featured-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr;gap:2rem}.footer-bottom{flex-direction:column;text-align:center}#cart-drawer{width:100%}.contact-form{padding:2rem 1.5rem}#scrollToTop{right:1rem;bottom:1rem;width:44px;height:44px}}
-@media(max-width:500px){.services-grid{grid-template-columns:1fr}.about-stats{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.nav-logo{font-size:1rem}.logo-sub{display:none}.nav-search{width:145px}.nav-actions{gap:0.65rem}.services-grid{grid-template-columns:1fr}.about-stats{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}#scrollToTop{transition:none}}
 </style>
 </head>
@@ -372,6 +381,10 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
     <li><a href="#contact">Contact</a></li>
   </ul>
   <div class="nav-actions">
+    <label class="nav-search" aria-label="Search products">
+      <i class="fa fa-search"></i>
+      <input id="mainProductSearch" type="search" placeholder="Search products..." oninput="handleMainSearch(this.value)">
+    </label>
     <button class="cart-icon-wrap" onclick="toggleCart()" title="View Cart">
       <i class="fa fa-shopping-bag"></i>
       <span id="cart-count">0</span>
@@ -723,6 +736,7 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
   <div class="pm-body">
     <div class="pm-media">
       <img id="pmImg" src="" alt="">
+      <div class="pm-thumbs" id="pmThumbs"></div>
       <span class="pm-badge" id="pmBadge" style="display:none"></span>
     </div>
     <div class="pm-info">
@@ -777,6 +791,14 @@ let TESTIMONIALS=[];
 const API_BASE=(window.ADORE_API_BASE||"http://localhost:8080").replace(/\/$/,"");
 /* data is loaded from Spring Boot */
 let cart=[];
+let productSearchQuery='';
+let activeWigFilter='all';
+
+function matchesProductSearch(product){
+  if(!productSearchQuery)return true;
+  return [product.name,product.desc,product.cat,product.tag]
+    .some(value=>String(value||'').toLowerCase().includes(productSearchQuery));
+}
 
 function isWig(product){
   if(product.productType)return String(product.productType).toUpperCase()==='WIG';
@@ -784,9 +806,9 @@ function isWig(product){
   return !product.cat||wigCategories.includes(product.cat);
 }
 
-function renderProducts(filter='all'){
+function renderProducts(filter=activeWigFilter){
   const grid=document.getElementById('productsGrid');
-  const wigs=PRODUCTS.filter(isWig);
+  const wigs=PRODUCTS.filter(isWig).filter(matchesProductSearch);
   const items=filter==='all'?wigs:wigs.filter(p=>p.cat===filter);
   grid.innerHTML='';
   if(!items.length){grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:var(--gray);padding:3rem;font-family:var(--serif);font-size:1.2rem">No wigs found in this category.</p>';return;}
@@ -805,7 +827,7 @@ function renderProducts(filter='all'){
 function renderOtherProducts(){
   const section=document.getElementById('otherProductsSection');
   const grid=document.getElementById('otherProductsGrid');
-  const items=PRODUCTS.filter(p=>!isWig(p));
+  const items=PRODUCTS.filter(p=>!isWig(p)).filter(matchesProductSearch);
   section.style.display=items.length?'block':'none';
   grid.innerHTML='';
   items.forEach((p,i)=>{
@@ -866,9 +888,19 @@ document.querySelectorAll('.ftab').forEach(tab=>{
   tab.addEventListener('click',function(){
     document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
     this.classList.add('active');
-    renderProducts(this.dataset.filter);
+    activeWigFilter=this.dataset.filter;
+    renderProducts();
   });
 });
+
+function handleMainSearch(value){
+  productSearchQuery=value.trim().toLowerCase();
+  activeWigFilter='all';
+  document.querySelectorAll('.ftab').forEach(tab=>tab.classList.toggle('active',tab.dataset.filter==='all'));
+  renderProducts();
+  renderOtherProducts();
+  if(productSearchQuery)document.getElementById('gallery').scrollIntoView({behavior:'smooth',block:'start'});
+}
 
 function addToCart(id){
   const all=[...PRODUCTS,...FEATURED];
@@ -961,8 +993,11 @@ function openProductModal(id){
   const p=all.find(x=>x.id===id);
   if(!p)return;
   pmProduct=p;
-  document.getElementById('pmImg').src=p.img;
-  document.getElementById('pmImg').alt=p.name;
+  const images=[...new Set([...(p.imageUrls||[]),p.img].filter(Boolean))];
+  showProductImage(images[0],0);
+  const thumbs=document.getElementById('pmThumbs');
+  thumbs.style.display=images.length>1?'flex':'none';
+  thumbs.innerHTML=images.map((url,index)=>`<button class="pm-thumb ${index===0?'active':''}" onclick="showProductImage(decodeURIComponent('${encodeURIComponent(url)}'),${index})" aria-label="View image ${index+1}"><img src="${esc(url)}" alt="${esc(p.name)} image ${index+1}"></button>`).join('');
   const badge=document.getElementById('pmBadge');
   if(p.tag){badge.textContent=p.tag;badge.style.display='inline-block';}else{badge.style.display='none';}
   document.getElementById('pmCat').textContent=p.cat?String(p.cat).replace(/-/g,' '):'Adore Hair Studio';
@@ -981,6 +1016,13 @@ function openProductModal(id){
   document.getElementById('product-modal').classList.add('open');
   document.body.style.overflow='hidden';
   loadProductReviews(id);
+}
+
+function showProductImage(url,index){
+  const image=document.getElementById('pmImg');
+  image.src=url||'';
+  image.alt=pmProduct?pmProduct.name:'';
+  document.querySelectorAll('.pm-thumb').forEach((thumb,i)=>thumb.classList.toggle('active',i===index));
 }
 
 function closeProductModal(){
