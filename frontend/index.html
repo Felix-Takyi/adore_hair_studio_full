@@ -505,7 +505,7 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
       <div class="loc-items">
         <div class="loc-item">
           <div class="loc-icon"><i class="fa fa-map-marker-alt"></i></div>
-          <div><strong>Studio Address</strong><span>Michel Camp/Gbestile, Accra, Ghana<br>Gbestile - near the Gbestile Bumper Park <br>Michel Camp - Inside the barracks</span></div>
+          <div><strong>Studio Address</strong><span id="siteLocationAddress">Michel Camp/Gbestile, Accra, Ghana<br>Gbestile - near the Gbestile Bumper Park<br>Michel Camp - Inside the barracks</span></div>
         </div>
         <div class="loc-item">
           <div class="loc-icon"><i class="fa fa-clock"></i></div>
@@ -513,7 +513,7 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
         </div>
         <div class="loc-item">
           <div class="loc-icon"><i class="fa fa-phone-alt"></i></div>
-          <div><strong>Phone &amp; WhatsApp</strong><span>+233 55 651 6470</span></div>
+          <div><strong>Phone &amp; WhatsApp</strong><span id="siteLocationPhone">+233 55 651 6470</span></div>
         </div>
         <div class="loc-item">
           <div class="loc-icon"><i class="fa fa-parking"></i></div>
@@ -561,7 +561,7 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
       <h2 class="section-title">Let's Create Your <em>Dream</em> Look</h2>
       <p class="section-sub">Have a question, want to book a service, or order a custom wig? We'd love to hear from you.</p>
       <div class="contact-channels">
-        <a href="https://wa.me/233556516470" target="_blank" class="channel">
+        <a href="https://wa.me/233556516470" target="_blank" rel="noopener" class="channel">
           <div class="ch-icon wa"><i class="fab fa-whatsapp"></i></div>
           <div class="ch-txt"><strong>WhatsApp</strong><span>+233 55 651 6470</span></div>
         </a>
@@ -569,7 +569,7 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
           <div class="ch-icon ph"><i class="fa fa-phone-alt"></i></div>
           <div class="ch-txt"><strong>Call Us</strong><span>+233 55 651 6470</span></div>
         </a>
-        <a href="https://instagram.com/m.nyx12/" target="_blank" class="channel">
+        <a href="https://instagram.com/m.nyx12/" target="_blank" rel="noopener" class="channel">
           <div class="ch-icon ig"><i class="fab fa-instagram"></i></div>
           <div class="ch-txt"><strong>Instagram</strong><span>@m.nyx12</span></div>
         </a>
@@ -632,7 +632,7 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
       <div class="footer-logo">Adore Hair Studio<span class="logo-sub">Luxury · Accra · Ghana</span></div>
       <p>Handcrafted wigs, expert styling, and unforgettable transformations — all delivered with elegance and love from our East Legon studio.</p>
       <div class="footer-socials">
-        <a href="#" class="soc"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="soc" id="footerInstagram" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
         <a href="#" class="soc"><i class="fab fa-facebook-f"></i></a>
         <a href="#" class="soc"><i class="fab fa-tiktok"></i></a>
         <a href="#" class="soc"><i class="fab fa-youtube"></i></a>
@@ -662,10 +662,10 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
     <div class="footer-col">
       <h4>Contact</h4>
       <ul>
-        <li><a href="#">Tema - Michel Camp / Gbestile</a></li>
-        <li><a href="tel:+233240000000">+233 55 651 6470</a></li>
-        <li><a href="mailto:maureenasumda1@gmail.com">maureenasumda1@gmail.com</a></li>
-        <li><a href="#">Always available</a></li>
+        <li><a href="#" id="footerAddress">Tema - Michel Camp / Gbestile</a></li>
+        <li><a href="tel:+233556516470" id="footerPhone">+233 55 651 6470</a></li>
+        <li><a href="mailto:maureenasumda1@gmail.com" id="footerEmail">maureenasumda1@gmail.com</a></li>
+        <li><a href="#" id="footerWhatsApp">WhatsApp</a></li>
       </ul>
     </div>
   </div>
@@ -1196,13 +1196,98 @@ async function loadSiteData(){
 }
 function applySettings(st){
   if(!st)return;
-  const eye=document.querySelector('.hero-eyebrow span'); if(eye&&st.heroEyebrow)eye.textContent=st.heroEyebrow;
-  const h=document.querySelector('.hero-h1'); if(h&&st.heroTitle)h.textContent=st.heroTitle;
-  const tag=document.querySelector('.hero-tagline'); if(tag&&st.heroTagline)tag.textContent=st.heroTagline;
-  const wa=document.querySelector('.ch-icon.wa')?.closest('a'); if(wa&&st.whatsapp){wa.href='https://wa.me/'+st.whatsapp; const sp=wa.querySelector('.ch-txt span'); if(sp&&st.phone)sp.textContent=st.phone;}
-  const ph=document.querySelector('.ch-icon.ph')?.closest('a'); if(ph&&st.phone){ph.href='tel:'+st.phone.replace(/\s/g,''); const sp=ph.querySelector('.ch-txt span'); if(sp)sp.textContent=st.phone;}
-  const ig=document.querySelector('.ch-icon.ig')?.closest('a'); if(ig&&st.instagram)ig.href=st.instagram;
-  const em=document.querySelector('.ch-icon.em')?.closest('a'); if(em&&st.email){em.href='mailto:'+st.email; const sp=em.querySelector('.ch-txt span'); if(sp)sp.textContent=st.email;}
+
+  const cleanPhone = value => (value || '').trim();
+  const phoneDigits = value => cleanPhone(value).replace(/[^0-9+]/g,'').replace(/^\+/,'');
+  const instagramLabel = value => {
+    if(!value) return '';
+    try {
+      const url = new URL(value);
+      const handle = url.pathname.replace(/^\/+|\/+$/g,'').split('/')[0];
+      return handle ? '@' + handle : value;
+    } catch(e) {
+      return value.replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@?/,'@').replace(/\/$/,'');
+    }
+  };
+
+  const eye=document.querySelector('.hero-eyebrow span');
+  if(eye&&st.heroEyebrow)eye.textContent=st.heroEyebrow;
+
+  const h=document.querySelector('.hero-h1');
+  if(h&&st.heroTitle)h.textContent=st.heroTitle;
+
+  const tag=document.querySelector('.hero-tagline');
+  if(tag&&st.heroTagline)tag.textContent=st.heroTagline;
+
+  const phone=cleanPhone(st.phone);
+  const whatsapp=phoneDigits(st.whatsapp);
+  const email=cleanPhone(st.email);
+  const instagram=cleanPhone(st.instagram);
+  const address=cleanPhone(st.address);
+
+  const wa=document.querySelector('.ch-icon.wa')?.closest('a');
+  if(wa&&whatsapp){
+    wa.href='https://wa.me/'+whatsapp;
+    const sp=wa.querySelector('.ch-txt span');
+    if(sp)sp.textContent=phone || st.whatsapp;
+  }
+
+  const ph=document.querySelector('.ch-icon.ph')?.closest('a');
+  if(ph&&phone){
+    ph.href='tel:'+phone.replace(/\s/g,'');
+    const sp=ph.querySelector('.ch-txt span');
+    if(sp)sp.textContent=phone;
+  }
+
+  const ig=document.querySelector('.ch-icon.ig')?.closest('a');
+  if(ig&&instagram){
+    ig.href=instagram;
+    const sp=ig.querySelector('.ch-txt span');
+    if(sp)sp.textContent=instagramLabel(instagram);
+  }
+
+  const em=document.querySelector('.ch-icon.em')?.closest('a');
+  if(em&&email){
+    em.href='mailto:'+email;
+    const sp=em.querySelector('.ch-txt span');
+    if(sp)sp.textContent=email;
+  }
+
+  const locationAddress=document.getElementById('siteLocationAddress');
+  if(locationAddress&&address)locationAddress.textContent=address;
+
+  const locationPhone=document.getElementById('siteLocationPhone');
+  if(locationPhone&&(phone||st.whatsapp))locationPhone.textContent=phone || st.whatsapp;
+
+  const footerAddress=document.getElementById('footerAddress');
+  if(footerAddress&&address)footerAddress.textContent=address;
+
+  const footerPhone=document.getElementById('footerPhone');
+  if(footerPhone&&phone){
+    footerPhone.href='tel:'+phone.replace(/\s/g,'');
+    footerPhone.textContent=phone;
+  }
+
+  const footerEmail=document.getElementById('footerEmail');
+  if(footerEmail&&email){
+    footerEmail.href='mailto:'+email;
+    footerEmail.textContent=email;
+  }
+
+  const footerWhatsApp=document.getElementById('footerWhatsApp');
+  if(footerWhatsApp&&whatsapp){
+    footerWhatsApp.href='https://wa.me/'+whatsapp;
+    footerWhatsApp.target='_blank';
+    footerWhatsApp.rel='noopener';
+    footerWhatsApp.textContent='WhatsApp';
+  }
+
+  const footerInstagram=document.getElementById('footerInstagram');
+  if(footerInstagram&&instagram){
+    footerInstagram.href=instagram;
+    footerInstagram.target='_blank';
+    footerInstagram.rel='noopener';
+  }
 }
 
 const scrollToTopButton=document.getElementById('scrollToTop');
