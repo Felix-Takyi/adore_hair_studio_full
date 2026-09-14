@@ -589,6 +589,61 @@
             box-shadow: 0 6px 16px rgba(0,0,0,.14);
         }
 
+        .product-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .layout-switch {
+            display: inline-flex;
+            gap: 5px;
+            padding: 5px;
+            margin: 4px 0 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .layout-switch button {
+            border: 0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            color: var(--muted);
+            font-family: var(--sans);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .layout-switch button.active {
+            background: var(--black);
+            color: var(--gold-lt);
+        }
+
+        .item-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .item-grid.list-view .item-card {
+            display: grid;
+            grid-template-columns: 170px minmax(0, 1fr);
+        }
+
+        .item-grid.list-view .item-thumb,
+        .item-grid.list-view .item-thumb-icon {
+            width: 170px;
+            height: 100%;
+            min-height: 155px;
+            aspect-ratio: auto;
+        }
+
+        .item-grid.list-view .item-actions {
+            margin-top: auto;
+        }
+
         .product-form-overlay {
             position: fixed;
             inset: 0;
@@ -1032,6 +1087,15 @@
             .top-search input {
                 font-size: 12px;
             }
+
+            .item-grid.list-view .item-card {
+                grid-template-columns: 110px minmax(0, 1fr);
+            }
+
+            .item-grid.list-view .item-thumb,
+            .item-grid.list-view .item-thumb-icon {
+                width: 110px;
+            }
         }
 
         @media (max-width: 460px) {
@@ -1197,6 +1261,7 @@
     let productSearchQuery = '';
     let pendingProductImages = [];
     let adminProductGroup = 'WIG';
+    let adminProductLayout = localStorage.getItem('adore_product_layout') || 'grid';
 
 
    const api = async (path, opt = {}) => {
@@ -1706,6 +1771,12 @@
         renderProducts(allProductsCache);
     }
 
+    function selectProductLayout(layout) {
+        adminProductLayout = layout === 'list' ? 'list' : 'grid';
+        localStorage.setItem('adore_product_layout', adminProductLayout);
+        renderProducts(allProductsCache);
+    }
+
 
     function renderProducts(xs) {
 
@@ -1737,7 +1808,7 @@
         const otherProducts = matchingProducts.filter(product => getProductType(product) === 'OTHER');
 
         const cards = products => products.length ? `
-            <div class="item-grid">
+            <div class="item-grid ${adminProductLayout === 'list' ? 'list-view' : ''}">
                 ${products.map(x => `
                     <div class="item-card">
                         ${x.imageUrl
@@ -1787,13 +1858,24 @@
 
             <div id="form"></div>
 
-            <div class="product-view-switch" role="tablist" aria-label="Choose a product group">
-                <button class="${adminProductGroup === 'WIG' ? 'active' : ''}" onclick="selectProductGroup('WIG')">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Wigs (${wigs.length})
-                </button>
-                <button class="${adminProductGroup === 'OTHER' ? 'active' : ''}" onclick="selectProductGroup('OTHER')">
-                    <i class="fa-solid fa-boxes-stacked"></i> Other Products (${otherProducts.length})
-                </button>
+            <div class="product-controls">
+                <div class="product-view-switch" role="tablist" aria-label="Choose a product group">
+                    <button class="${adminProductGroup === 'WIG' ? 'active' : ''}" onclick="selectProductGroup('WIG')">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Wigs (${wigs.length})
+                    </button>
+                    <button class="${adminProductGroup === 'OTHER' ? 'active' : ''}" onclick="selectProductGroup('OTHER')">
+                        <i class="fa-solid fa-boxes-stacked"></i> Other Products (${otherProducts.length})
+                    </button>
+                </div>
+
+                <div class="layout-switch" aria-label="Product display style">
+                    <button class="${adminProductLayout === 'grid' ? 'active' : ''}" onclick="selectProductLayout('grid')" title="Grid view">
+                        <i class="fa-solid fa-table-cells-large"></i> Grid
+                    </button>
+                    <button class="${adminProductLayout === 'list' ? 'active' : ''}" onclick="selectProductLayout('list')" title="List view">
+                        <i class="fa-solid fa-list"></i> List
+                    </button>
+                </div>
             </div>
 
             <section class="product-group">
