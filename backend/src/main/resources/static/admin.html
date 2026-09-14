@@ -562,6 +562,78 @@
             font-size: 19px;
         }
 
+        .product-view-switch {
+            display: inline-flex;
+            gap: 8px;
+            padding: 6px;
+            margin: 4px 0 18px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--cream);
+        }
+
+        .product-view-switch button {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 18px;
+            background: transparent;
+            color: var(--muted);
+            font-family: var(--sans);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .product-view-switch button.active {
+            background: var(--black);
+            color: var(--gold-lt);
+            box-shadow: 0 6px 16px rgba(0,0,0,.14);
+        }
+
+        .product-form-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(8,8,8,.72);
+            backdrop-filter: blur(5px);
+        }
+
+        .product-form-modal {
+            width: min(920px, 100%);
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            margin: 0;
+            border: 1px solid #eee0bd;
+            background: #fffdf6;
+            box-shadow: 0 28px 80px rgba(0,0,0,.35);
+        }
+
+        .product-form-head {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            margin-bottom: 14px;
+            background: #fffdf6;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .modal-close {
+            width: 38px;
+            height: 38px;
+            border: 0;
+            border-radius: 50%;
+            background: var(--cream);
+            color: var(--black);
+            cursor: pointer;
+        }
+
         .item-card {
             border: 1px solid var(--line);
             border-radius: 14px;
@@ -1124,6 +1196,7 @@
     let allProductsCache = [];
     let productSearchQuery = '';
     let pendingProductImages = [];
+    let adminProductGroup = 'WIG';
 
 
    const api = async (path, opt = {}) => {
@@ -1628,6 +1701,11 @@
             : 'OTHER';
     }
 
+    function selectProductGroup(group) {
+        adminProductGroup = group;
+        renderProducts(allProductsCache);
+    }
+
 
     function renderProducts(xs) {
 
@@ -1709,26 +1787,33 @@
 
             <div id="form"></div>
 
-            <section class="product-group">
-                <div class="product-group-head">
-                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Wigs</h3>
-                    <span class="pill gold">${wigs.length}</span>
-                </div>
-                ${cards(wigs)}
-            </section>
+            <div class="product-view-switch" role="tablist" aria-label="Choose a product group">
+                <button class="${adminProductGroup === 'WIG' ? 'active' : ''}" onclick="selectProductGroup('WIG')">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Wigs (${wigs.length})
+                </button>
+                <button class="${adminProductGroup === 'OTHER' ? 'active' : ''}" onclick="selectProductGroup('OTHER')">
+                    <i class="fa-solid fa-boxes-stacked"></i> Other Products (${otherProducts.length})
+                </button>
+            </div>
 
             <section class="product-group">
                 <div class="product-group-head">
-                    <h3><i class="fa-solid fa-boxes-stacked"></i> Other Products</h3>
-                    <span class="pill gold">${otherProducts.length}</span>
+                    <h3>${adminProductGroup === 'WIG'
+                        ? '<i class="fa-solid fa-wand-magic-sparkles"></i> Wigs'
+                        : '<i class="fa-solid fa-boxes-stacked"></i> Other Products'}</h3>
+                    <span class="pill gold">${adminProductGroup === 'WIG' ? wigs.length : otherProducts.length}</span>
                 </div>
-                ${cards(otherProducts)}
+                ${cards(adminProductGroup === 'WIG' ? wigs : otherProducts)}
             </section>
         `;
     }
 
 
     function productForm(x = {}) {
+
+        if (!x.id && !x.productType) {
+            x = {...x, productType: adminProductGroup};
+        }
 
         pendingProductImages = [...new Set([
             ...(x.imageUrls || []),
@@ -1740,10 +1825,15 @@
 
         form.innerHTML = `
 
-            <div class="card" style="border:1px solid #eee0bd;background:#fffdf6;">
+            <div class="product-form-overlay" onclick="if(event.target === this) closeProductForm()">
+            <div class="card product-form-modal">
 
-                <h3><i class="fa-solid fa-pen" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>${x.id ? 'Edit' : 'New'} product
-                </h3>
+                <div class="product-form-head">
+                    <h3><i class="fa-solid fa-pen" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>${x.id ? 'Edit' : 'New'} product</h3>
+                    <button type="button" class="modal-close" onclick="closeProductForm()" aria-label="Close product form">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
 
                 <div class="grid">
 
@@ -1952,11 +2042,25 @@
                 </button>
 
             </div>
+            </div>
         `;
 
         updateProductCategoryOptions(x.category || '');
         renderPendingProductImages();
+        document.body.style.overflow = 'hidden';
     }
+
+    function closeProductForm() {
+        const form = document.getElementById('form');
+        if (form) form.innerHTML = '';
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && document.querySelector('.product-form-overlay')) {
+            closeProductForm();
+        }
+    });
 
 
     function updateProductCategoryOptions(selectedCategory = '') {
@@ -2210,7 +2314,7 @@
                     : 'Product added successfully.'
             );
 
-
+            document.body.style.overflow = '';
             load();
 
 
