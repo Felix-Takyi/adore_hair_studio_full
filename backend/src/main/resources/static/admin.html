@@ -644,6 +644,21 @@
             margin-top: auto;
         }
 
+        .admin-records.grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 14px;
+        }
+
+        .admin-records.grid-view .msg-item,
+        .admin-records.grid-view .msg-item:first-child {
+            height: 100%;
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+        }
+
         .product-form-overlay {
             position: fixed;
             inset: 0;
@@ -1261,7 +1276,7 @@
     let productSearchQuery = '';
     let pendingProductImages = [];
     let adminProductGroup = 'WIG';
-    let adminProductLayout = localStorage.getItem('adore_product_layout') || 'grid';
+    let adminListLayout = localStorage.getItem('adore_admin_layout') || 'list';
 
 
    const api = async (path, opt = {}) => {
@@ -1368,6 +1383,8 @@
             );
 
             token = r.token;
+            adminListLayout = 'list';
+            localStorage.setItem('adore_admin_layout', 'list');
 
             localStorage.setItem(
                 'adore_admin_token',
@@ -1771,10 +1788,24 @@
         renderProducts(allProductsCache);
     }
 
-    function selectProductLayout(layout) {
-        adminProductLayout = layout === 'list' ? 'list' : 'grid';
-        localStorage.setItem('adore_product_layout', adminProductLayout);
-        renderProducts(allProductsCache);
+    function selectAdminLayout(layout) {
+        adminListLayout = layout === 'grid' ? 'grid' : 'list';
+        localStorage.setItem('adore_admin_layout', adminListLayout);
+        if (tab === 'products') renderProducts(allProductsCache);
+        else load();
+    }
+
+    function adminLayoutSwitcher() {
+        return `
+            <div class="layout-switch" aria-label="Display style">
+                <button class="${adminListLayout === 'list' ? 'active' : ''}" onclick="selectAdminLayout('list')" title="List view">
+                    <i class="fa-solid fa-list"></i> List
+                </button>
+                <button class="${adminListLayout === 'grid' ? 'active' : ''}" onclick="selectAdminLayout('grid')" title="Grid view">
+                    <i class="fa-solid fa-table-cells-large"></i> Grid
+                </button>
+            </div>
+        `;
     }
 
 
@@ -1808,7 +1839,7 @@
         const otherProducts = matchingProducts.filter(product => getProductType(product) === 'OTHER');
 
         const cards = products => products.length ? `
-            <div class="item-grid ${adminProductLayout === 'list' ? 'list-view' : ''}">
+            <div class="item-grid ${adminListLayout === 'list' ? 'list-view' : ''}">
                 ${products.map(x => `
                     <div class="item-card">
                         ${x.imageUrl
@@ -1868,14 +1899,7 @@
                     </button>
                 </div>
 
-                <div class="layout-switch" aria-label="Product display style">
-                    <button class="${adminProductLayout === 'grid' ? 'active' : ''}" onclick="selectProductLayout('grid')" title="Grid view">
-                        <i class="fa-solid fa-table-cells-large"></i> Grid
-                    </button>
-                    <button class="${adminProductLayout === 'list' ? 'active' : ''}" onclick="selectProductLayout('list')" title="List view">
-                        <i class="fa-solid fa-list"></i> List
-                    </button>
-                </div>
+                ${adminLayoutSwitcher()}
             </div>
 
             <section class="product-group">
@@ -2440,8 +2464,13 @@
 
             <div id="form"></div>
 
+            <div class="product-controls">
+                <span></span>
+                ${adminLayoutSwitcher()}
+            </div>
+
             ${xs.length ? `
-                <div class="item-grid">
+                <div class="item-grid ${adminListLayout === 'list' ? 'list-view' : ''}">
 
                     ${xs.map(x => `
 
@@ -2717,8 +2746,13 @@
 
             <div id="form"></div>
 
+            <div class="product-controls">
+                <span></span>
+                ${adminLayoutSwitcher()}
+            </div>
+
             ${xs.length ? `
-                <div class="item-grid">
+                <div class="item-grid ${adminListLayout === 'list' ? 'list-view' : ''}">
 
                     ${xs.map(x => `
 
@@ -2991,6 +3025,8 @@
                 </div>
             </div>
 
+            <div class="product-controls"><span></span>${adminLayoutSwitcher()}</div>
+
             ${
                 xs.length
                     ? ''
@@ -3002,6 +3038,7 @@
                     `
             }
 
+            <div class="admin-records ${adminListLayout === 'grid' ? 'grid-view' : ''}">
             ${xs.map(x => `
 
                 <div class="msg-item">
@@ -3042,6 +3079,7 @@
                 </div>
 
             `).join('')}
+            </div>
 
         `;
     }
@@ -3074,6 +3112,8 @@
                 </div>
             </div>
 
+            <div class="product-controls"><span></span>${adminLayoutSwitcher()}</div>
+
             ${
                 xs.length
                     ? ''
@@ -3086,6 +3126,7 @@
             }
 
 
+            <div class="admin-records ${adminListLayout === 'grid' ? 'grid-view' : ''}">
             ${xs.map(x => `
 
                 <div class="msg-item ${x.readMessage ? '' : 'msg-unread'}">
@@ -3141,6 +3182,7 @@
                 </div>
 
             `).join('')}
+            </div>
 
         `;
     }
