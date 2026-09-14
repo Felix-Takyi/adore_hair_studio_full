@@ -2,6 +2,7 @@ package com.adorehairstudio.api.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,12 @@ public class Product {
   private boolean featured;
   private boolean active=true;
   private Integer displayOrder=0;
+  @Column(name="created_at", updatable=false)
+  private Instant createdAt;
+  @PrePersist
+  protected void onCreate(){
+    if(createdAt==null) createdAt=Instant.now();
+  }
   public Long getId(){return id;} public void setId(Long id){this.id=id;}
   public String getName(){return name;} public void setName(String v){name=v;}
   public String getDescription(){return description;} public void setDescription(String v){description=v;}
@@ -54,4 +61,5 @@ public class Product {
   public boolean isFeatured(){return featured;} public void setFeatured(boolean v){featured=v;}
   public boolean isActive(){return active;} public void setActive(boolean v){active=v;}
   public Integer getDisplayOrder(){return displayOrder;} public void setDisplayOrder(Integer v){displayOrder=v;}
+  public Instant getCreatedAt(){return createdAt;} public void setCreatedAt(Instant v){createdAt=v;}
 }
