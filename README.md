@@ -1,103 +1,119 @@
-# Adore Hair Studio — Spring Boot Full Stack
+# Adore Hair Studio
 
-This project converts the original static Vercel website into a database-backed site with an admin portal.
+Adore Hair Studio is a full-stack hair studio and e-commerce website for displaying wigs and other products, services, testimonials, reviews, contact information, and managing content through an admin console.
 
-## Structure
+## Technology and tools used
 
-- `frontend/` — existing HTML/CSS/JS site, modified to read data from the API.
-- `backend/` — Spring Boot REST API + PostgreSQL/H2 + JWT admin authentication.
-- Admin portal: `BACKEND_URL/admin.html`
+### Frontend
+- **HTML5** — page structure and content.
+- **CSS3** — responsive layout, black/gold visual design, cards, modals, forms, animations, and dark mode.
+- **JavaScript (Vanilla JS)** — product loading, search, cart, product gallery, reviews, settings integration, admin interactions, and theme switching.
+- **Google Fonts** — Playfair Display and Poppins typography.
+- **Font Awesome** — interface icons.
+- **Browser Local Storage** — remembers the selected light/dark theme and other client-side preferences.
 
-## What is dynamic now
+### Backend
+- **Java** — backend programming language.
+- **Spring Boot** — REST API and server-side application framework.
+- **PostgreSQL** — relational database for products, services, settings, testimonials, reviews, and related application data.
+- **REST API** — connects the frontend to the Spring Boot backend.
+- **JWT authentication** — protects admin API operations.
 
-- Products: add, edit, delete, hide/show, category, price, old price, featured flag, image URL.
-- Services: add, edit, delete, hide/show.
-- Testimonials: add, edit, delete, hide/show.
-- Contact form: saves enquiries to the database.
-- Admin messages: view, mark read, delete.
-- Site settings: phone, WhatsApp, email, Instagram, address and hero text.
+### Development tools
+- **Visual Studio Code** — code editing and project development.
+- **Git** — source-code version control.
+- **Git Bash** — running Git and project commands on Windows.
+- **GitHub** — remote source-code repository and version history.
 
-## Recommended free deployment
+### Deployment / hosting
+- **Vercel** — hosts the public frontend website.
+- **Render** — hosts the Spring Boot backend/API.
+- **PostgreSQL on the backend environment** — stores the application's persistent data.
 
-- Frontend: Vercel (keep your existing deployment).
-- Spring Boot backend: Render free Web Service.
-- PostgreSQL: Neon Free plan. Do NOT depend on Render Free Postgres for permanent data because its free databases expire after 30 days.
-- Images: Cloudinary Free, or another persistent image host. Render Free Web Services have an ephemeral filesystem.
+### Optional uptime support
+- **UptimeRobot** can be used to send a request to the Render API every 5 minutes while the backend is on Render's Free service. This can reduce the visible cold-start delay caused by an idle Render service.
 
-## Local development
+## Main features
 
-Requirements: Java 17+, Maven.
+- Product catalogue with **Wigs** and **Other Products** groups.
+- Product search.
+- Product descriptions with **Read More** details.
+- Multiple product images and product gallery.
+- Featured / best-seller products.
+- Shopping cart and checkout flow.
+- Product reviews and ratings.
+- Services section.
+- Testimonials.
+- Admin product management.
+- Admin list/grid display.
+- Product added date and time.
+- Homepage hero settings.
+- Contact and social-media settings controlled from the admin console.
+- Responsive mobile navigation.
+- Light/dark mode toggle on the public website.
+- Light/dark mode toggle on the admin console.
+- Theme preference is remembered with browser Local Storage.
+
+## Dark mode
+
+The current update adds an animated light/dark switch to:
+
+1. The public Adore Hair Studio website.
+2. The admin console.
+
+The public website stores its theme using:
+
+`adore_theme`
+
+The admin console stores its theme using:
+
+`adore_admin_theme`
+
+The theme is applied before the page finishes loading so the selected mode can be restored after a refresh.
+
+## Deployment structure
+
+```text
+Adore Hair Studio
+│
+├── frontend/
+│   └── index.html          → Vercel public website
+│
+└── backend/
+    └── Spring Boot API     → Render backend
+        └── static/
+            └── admin.html  → Admin console
+```
+
+## Applying the latest dark-mode update
+
+Replace these two files in the existing repository:
+
+```text
+frontend/index.html
+backend/src/main/resources/static/admin.html
+```
+
+Then from the repository root run:
 
 ```bash
-cd backend
-mvn spring-boot:run
+git status
+git add frontend/index.html backend/src/main/resources/static/admin.html README.md
+git commit -m "Add dark mode and document project tools"
+git push origin main
 ```
 
-The backend defaults to a local H2 file database. Open:
+After Vercel deploys the frontend, do a hard refresh in the browser with **Ctrl + Shift + R**.
 
-- API: `http://localhost:8080/api/public/products`
-- Admin: `http://localhost:8080/admin.html`
+Because `admin.html` is part of the Spring Boot backend, Render must also redeploy the backend for the admin-console dark mode to appear.
 
-Change these for deployment.
+## Project services
 
-Serve the `frontend/` folder with a local static server on port 5500. `frontend/config.js` already points to `http://localhost:8080`.
+- Public frontend: Vercel
+- Backend API: Render
+- Database: PostgreSQL
+- Source repository: GitHub
 
-## Deploy backend to Render
+## Notes
 
-1. Put the project in GitHub.
-2. In Render create a new **Web Service** from the repository.
-3. Set the root directory to `backend`.
-4. Use the included `Dockerfile` (or Render Blueprint if preferred).
-5. Choose the Free instance.
-6. Add these environment variables:
-
-```text
-DATABASE_URL=jdbc:postgresql://YOUR_NEON_HOST/YOUR_DB?sslmode=require
-DATABASE_USERNAME=YOUR_NEON_USERNAME
-DATABASE_PASSWORD=YOUR_NEON_PASSWORD
-FRONTEND_URL=https://YOUR-VERCEL-SITE.vercel.app
-ADMIN_EMAIL=your-admin-email@example.com
-ADMIN_PASSWORD=use-a-long-unique-password
-JWT_SECRET=use-a-random-secret-at-least-32-characters-long
-```
-
-Render also supplies `PORT`; the application reads it automatically.
-
-## Connect Vercel frontend to Render
-
-After Render gives you a URL such as:
-
-```text
-https://adore-hair-api.onrender.com
-```
-
-edit `frontend/config.js`:
-
-```js
-window.ADORE_API_BASE = 'https://adore-hair-api.onrender.com';
-```
-
-Then redeploy the `frontend/` folder to Vercel.
-
-Your admin portal will be:
-
-```text
-https://adore-hair-api.onrender.com/admin.html
-```
-
-## Images
-
-Existing images such as `wig2.jpg` continue to load from Vercel. For new products, upload the image to Cloudinary and paste its HTTPS URL into the Image URL field in the admin portal.
-
-Do not upload images to the Render server filesystem on the free tier; those files are not persistent.
-
-## Security notes
-
-- Admin write endpoints are protected by JWT authentication.
-- Admin passwords are stored using BCrypt, not plain text.
-- Only the configured frontend origin is allowed by CORS in production.
-- Never commit production database credentials, JWT secret, or admin password to GitHub.
-
-## Current scope
-
-The cart remains browser-side and checkout still directs the customer to contact the salon; no payment gateway or order-management workflow has been added yet. If ecommerce is needed, add `Order`, `OrderItem`, payment status, customer checkout and admin order management as a separate phase.
+The project is designed as a practical academic/business project. The public site and admin console communicate through the Spring Boot REST API, while PostgreSQL provides persistent storage for application data.

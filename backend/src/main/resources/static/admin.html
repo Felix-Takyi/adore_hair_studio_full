@@ -3,6 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <script>
+        (function(){
+            const saved=localStorage.getItem('adore_admin_theme')||'light';
+            document.documentElement.dataset.theme=saved==='dark'?'dark':'light';
+        })();
+    </script>
 
     <title>Adore Hair Studio Admin</title>
 
@@ -1145,7 +1151,87 @@
                 grid-template-columns: 1fr;
             }
         }
-    </style>
+    
+        /* ---------- DARK MODE ---------- */
+        .theme-toggle{
+            width:58px;height:30px;border:1px solid rgba(201,168,76,.45);border-radius:999px;
+            background:rgba(255,255,255,.10);color:var(--gold);padding:3px;display:inline-flex;align-items:center;
+            cursor:pointer;position:relative;flex:none;transition:background .25s,border-color .25s,box-shadow .25s;
+        }
+        .theme-toggle:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(201,168,76,.16)}
+        .theme-toggle .theme-knob{width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--black);
+            display:flex;align-items:center;justify-content:center;font-size:12px;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(0,0,0,.22)}
+        html[data-theme="dark"] .theme-toggle .theme-knob{transform:translateX(28px)}
+
+        html[data-theme="dark"] body{
+            background:#0c0b0a;
+            color:#f2ece3;
+        }
+        html[data-theme="dark"] .card,
+        html[data-theme="dark"] .tabs button,
+        html[data-theme="dark"] .item-card,
+        html[data-theme="dark"] .login{
+            background:#171615;
+            border-color:#2b2926;
+            color:#f2ece3;
+            box-shadow:0 10px 30px rgba(0,0,0,.28);
+        }
+        html[data-theme="dark"] .tabs button{color:#eee5da}
+        html[data-theme="dark"] .tabs button:hover{border-color:#5b4a25}
+        html[data-theme="dark"] .tabs button.active{background:#050505;border-color:#050505;color:var(--gold-lt)}
+        html[data-theme="dark"] h1,
+        html[data-theme="dark"] h2,
+        html[data-theme="dark"] h3,
+        html[data-theme="dark"] .item-name,
+        html[data-theme="dark"] .msg-name{color:#f7f0e7}
+        html[data-theme="dark"] .section-head p,
+        html[data-theme="dark"] .row small,
+        html[data-theme="dark"] .msg-email,
+        html[data-theme="dark"] .msg-date,
+        html[data-theme="dark"] .item-meta,
+        html[data-theme="dark"] .sub{color:#aaa29a}
+        html[data-theme="dark"] input,
+        html[data-theme="dark"] textarea,
+        html[data-theme="dark"] select{background:#100f0e;color:#f2ece3;border-color:#35312d}
+        html[data-theme="dark"] input::placeholder,
+        html[data-theme="dark"] textarea::placeholder{color:#77716a}
+        html[data-theme="dark"] .row,
+        html[data-theme="dark"] .msg-item,
+        html[data-theme="dark"] .msg-unread{border-color:#2b2926}
+        html[data-theme="dark"] .msg-unread{background:#211d15}
+        html[data-theme="dark"] .empty-state{color:#aaa29a}
+        html[data-theme="dark"] .btn.secondary{background:#211f1c;color:#eee5da;border-color:#3a3530}
+        html[data-theme="dark"] .btn.secondary:hover{background:#2c2822}
+        html[data-theme="dark"] .pill.off{background:#292622;color:#aaa29a}
+        html[data-theme="dark"] .notice{background:#211d15;border-color:#4d4025;color:#d7c39a}
+        html[data-theme="dark"] .modal{background:rgba(0,0,0,.76)}
+        html[data-theme="dark"] .modal-content{background:#171615;color:#f2ece3;border-color:#302c27}
+        html[data-theme="dark"] .login .brand-mark{box-shadow:0 4px 14px rgba(201,168,76,.2)}
+        html[data-theme="dark"] .top-search input{background:rgba(255,255,255,.07)}
+        html[data-theme="dark"] .item-thumb,
+        html[data-theme="dark"] .item-thumb-icon{background:#100f0e;border-color:#302c27}
+        html[data-theme="dark"] .item-added{color:#aaa29a}
+        html[data-theme="dark"] .layout-switch,
+        html[data-theme="dark"] .stat-card,
+        html[data-theme="dark"] .image-preview-item{background:#171615;border-color:#2b2926}
+        html[data-theme="dark"] .layout-switch button{color:#aaa29a}
+        html[data-theme="dark"] .layout-switch button.active{background:#050505;color:var(--gold-lt)}
+        html[data-theme="dark"] .stat-number{color:#f7f0e7}
+        html[data-theme="dark"] .stat-icon.dark{background:#2b2926;color:#f2ece3}
+        html[data-theme="dark"] .quick-card{background:#1b1917;border-color:#514522}
+        html[data-theme="dark"] .quick-card:hover{background:#282319}
+        html[data-theme="dark"] .product-form-modal,
+        html[data-theme="dark"] .product-form-head{background:#171615;border-color:#3a3328}
+        html[data-theme="dark"] .modal-close{background:#26221d;color:#f2ece3}
+        html[data-theme="dark"] .admin-records.grid-view .msg-item,
+        html[data-theme="dark"] .image-preview-item{background:#171615}
+        html[data-theme="dark"] .stat-icon{background:#26221d}
+        html[data-theme="dark"] .stat-icon.pink{background:#2a2026}
+        html[data-theme="dark"] .stat-icon.danger{background:#321f1e}
+
+        @media(max-width:460px){html[data-theme="dark"] #logoutBtn{font-size:0}.theme-toggle{width:54px;height:29px}.theme-toggle .theme-knob{width:23px;height:23px}html[data-theme="dark"] .theme-toggle .theme-knob{transform:translateX(25px)}}
+
+</style>
 </head>
 
 <body>
@@ -1164,6 +1250,9 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <input id="topSearch" type="search" placeholder="Search products by name or category..." oninput="handleProductSearch(this.value)">
         </label>
+        <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleAdminTheme()" aria-label="Switch to dark mode" title="Switch to dark mode">
+            <span class="theme-knob"><i class="fa-solid fa-sun"></i></span>
+        </button>
         <button
             class="btn secondary"
             id="logoutBtn"
@@ -1270,12 +1359,32 @@
 
 <script>
 
+    function applyAdminTheme(theme){
+        const value=theme==='dark'?'dark':'light';
+        document.documentElement.dataset.theme=value;
+        localStorage.setItem('adore_admin_theme',value);
+        const btn=document.getElementById('themeToggle');
+        if(btn){
+            const dark=value==='dark';
+            btn.setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');
+            btn.setAttribute('title',dark?'Switch to light mode':'Switch to dark mode');
+            const icon=btn.querySelector('.theme-knob i');
+            if(icon) icon.className=dark?'fa-solid fa-moon':'fa-solid fa-sun';
+        }
+    }
+
+    function toggleAdminTheme(){
+        applyAdminTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+    }
+
     /* =========================================================
        AUTHENTICATION / API
     ========================================================= */
 
     let token =
         localStorage.getItem('adore_admin_token') || '';
+
+    document.addEventListener('DOMContentLoaded',()=>applyAdminTheme(document.documentElement.dataset.theme||'light'));
 
     let tab = 'dashboard';
     let allProductsCache = [];
