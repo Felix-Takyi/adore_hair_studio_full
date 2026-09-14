@@ -100,6 +100,8 @@ section{padding:7rem 5rem}
 .ftab{background:none;border:1.5px solid rgba(0,0,0,0.14);border-radius:40px;padding:0.5rem 1.5rem;font-size:0.75rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--black);transition:all var(--t);cursor:pointer}
 .ftab.active,.ftab:hover{background:var(--black);border-color:var(--black);color:var(--gold)}
 .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:2rem;max-width:1200px;margin:0 auto}
+.other-products-wrap{max-width:1200px;margin:5rem auto 0;padding-top:4rem;border-top:1px solid rgba(201,168,76,0.28)}
+.other-products-hd{text-align:center;max-width:620px;margin:0 auto 2.5rem}
 .prod-card{border-radius:18px;overflow:hidden;background:var(--white);border:1px solid rgba(0,0,0,0.07);box-shadow:0 4px 20px rgba(0,0,0,0.06);transition:transform var(--t) var(--ease),box-shadow var(--t) var(--ease);cursor:pointer}
 .prod-card:hover{transform:translateY(-8px);box-shadow:0 24px 55px rgba(0,0,0,0.13)}
 .prod-img{position:relative;height:290px;overflow:hidden}
@@ -448,6 +450,15 @@ footer{background:var(--black);padding:4rem 5rem 2.5rem;border-top:1px solid rgb
     <button class="ftab" data-filter="closure">Closure</button>
   </div>
   <div class="products-grid" id="productsGrid"></div>
+
+  <div class="other-products-wrap" id="otherProductsSection">
+    <div class="other-products-hd reveal">
+      <span class="section-tag">Beauty &amp; Care</span>
+      <h2 class="section-title">Other <em>Products</em></h2>
+      <p class="section-sub" style="margin:0 auto">Shop perfumes, hair care and accessories separately from our wig collection.</p>
+    </div>
+    <div class="products-grid" id="otherProductsGrid"></div>
+  </div>
 </section>
 
 <!-- SERVICES -->
@@ -767,11 +778,36 @@ const API_BASE=(window.ADORE_API_BASE||"http://localhost:8080").replace(/\/$/,""
 /* data is loaded from Spring Boot */
 let cart=[];
 
+function isWig(product){
+  if(product.productType)return String(product.productType).toUpperCase()==='WIG';
+  const wigCategories=['lace','body-wave','curly','colored','closure'];
+  return !product.cat||wigCategories.includes(product.cat);
+}
+
 function renderProducts(filter='all'){
   const grid=document.getElementById('productsGrid');
-  const items=filter==='all'?PRODUCTS:PRODUCTS.filter(p=>p.cat===filter);
+  const wigs=PRODUCTS.filter(isWig);
+  const items=filter==='all'?wigs:wigs.filter(p=>p.cat===filter);
   grid.innerHTML='';
   if(!items.length){grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:var(--gray);padding:3rem;font-family:var(--serif);font-size:1.2rem">No wigs found in this category.</p>';return;}
+  items.forEach((p,i)=>{
+    const stars='★'.repeat(p.stars)+'☆'.repeat(5-p.stars);
+    const div=document.createElement('div');
+    div.className='prod-card reveal';
+    div.style.animationDelay=i*0.07+'s';
+    div.onclick=()=>openProductModal(p.id);
+    div.innerHTML=`<div class="prod-img"><img src="${p.img}" alt="${p.name}" loading="lazy">${p.tag?`<span class="prod-badge">${p.tag}</span>`:''}<button class="wish-btn" onclick="event.stopPropagation()"><i class="fa fa-heart"></i></button></div><div class="prod-info"><div class="prod-stars">${stars}</div><div class="prod-name">${p.name}</div><div class="prod-desc">${p.desc}</div><div class="prod-foot"><div class="prod-price">GH&#8373; ${Number(p.price).toLocaleString()} <small>/ unit</small></div><button class="cart-btn" onclick="event.stopPropagation();addToCart(${p.id})">Add to Cart</button></div></div>`;
+    grid.appendChild(div);
+  });
+  initReveal();
+}
+
+function renderOtherProducts(){
+  const section=document.getElementById('otherProductsSection');
+  const grid=document.getElementById('otherProductsGrid');
+  const items=PRODUCTS.filter(p=>!isWig(p));
+  section.style.display=items.length?'block':'none';
+  grid.innerHTML='';
   items.forEach((p,i)=>{
     const stars='★'.repeat(p.stars)+'☆'.repeat(5-p.stars);
     const div=document.createElement('div');
@@ -797,7 +833,7 @@ function renderServices(){
 
 function renderFeatured(){
   const g=document.getElementById('featuredGrid');
-  FEATURED.forEach((p,i)=>{
+  FEATURED.filter(isWig).forEach((p,i)=>{
     const stars='★'.repeat(p.stars);
     const div=document.createElement('div');
     div.className='feat-card reveal';
@@ -1106,8 +1142,8 @@ async function loadSiteData(){
     SERVICES=sv.map(x=>({...x,price:x.priceLabel,desc:x.description}));
     FEATURED=ft.map(p=>({...p,img:p.imageUrl,desc:p.description,cat:p.category}));
     TESTIMONIALS=ts;
-    document.getElementById('productsGrid').innerHTML=''; document.getElementById('servicesGrid').innerHTML=''; document.getElementById('featuredGrid').innerHTML=''; document.getElementById('slidesTrack').innerHTML=''; document.getElementById('sliderDots').innerHTML='';
-    renderProducts();renderServices();renderFeatured();renderTestimonials();
+    document.getElementById('productsGrid').innerHTML=''; document.getElementById('otherProductsGrid').innerHTML=''; document.getElementById('servicesGrid').innerHTML=''; document.getElementById('featuredGrid').innerHTML=''; document.getElementById('slidesTrack').innerHTML=''; document.getElementById('sliderDots').innerHTML='';
+    renderProducts();renderOtherProducts();renderServices();renderFeatured();renderTestimonials();
     applySettings(st);
   }catch(e){
     console.error('Backend unavailable',e);

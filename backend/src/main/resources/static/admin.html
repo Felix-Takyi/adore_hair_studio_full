@@ -113,6 +113,39 @@
             color: #cfcfcf;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .top-search {
+            position: relative;
+            width: min(360px, 38vw);
+        }
+
+        .top-search i {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gold);
+            pointer-events: none;
+        }
+
+        .top-search input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1px solid rgba(201,168,76,.45);
+            border-radius: 999px;
+            background: rgba(255,255,255,.1);
+            color: #fff;
+        }
+
+        .top-search input::placeholder {
+            color: rgba(255,255,255,.62);
+        }
+
         main {
             max-width: 1220px;
             margin: 0 auto;
@@ -505,6 +538,30 @@
             margin-top: 18px;
         }
 
+        .product-group {
+            margin-top: 24px;
+            padding-top: 22px;
+            border-top: 1px solid var(--line);
+        }
+
+        .product-group:first-of-type {
+            margin-top: 8px;
+        }
+
+        .product-group-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .product-group-head h3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 19px;
+        }
+
         .item-card {
             border: 1px solid var(--line);
             border-radius: 14px;
@@ -863,9 +920,38 @@
             .brand-text span {
                 display: none;
             }
+
+            header {
+                padding: 12px 14px;
+            }
+
+            .top-search {
+                width: min(210px, 48vw);
+            }
+
+            .top-search input {
+                font-size: 12px;
+            }
         }
 
         @media (max-width: 460px) {
+            .brand-text {
+                display: none;
+            }
+
+            .top-search {
+                width: 180px;
+            }
+
+            #logoutBtn {
+                padding: 10px 12px;
+                font-size: 0;
+            }
+
+            #logoutBtn i {
+                font-size: 14px;
+            }
+
             .tabs {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -888,13 +974,19 @@
         </div>
     </div>
 
-    <button
-        class="btn secondary"
-        id="logoutBtn"
-        onclick="logout()">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-        Logout
-    </button>
+    <div class="header-actions">
+        <label class="top-search hidden" id="topSearchWrap" aria-label="Search products">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="topSearch" type="search" placeholder="Search products by name or category..." oninput="handleProductSearch(this.value)">
+        </label>
+        <button
+            class="btn secondary"
+            id="logoutBtn"
+            onclick="logout()">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            Logout
+        </button>
+    </div>
 </header>
 
 <main>
@@ -953,7 +1045,7 @@
 
             <button data-tab="products">
                 <span class="tab-icon"><i class="fa-solid fa-bag-shopping"></i></span>
-                Products
+                All Products
             </button>
 
             <button data-tab="services">
@@ -1001,6 +1093,8 @@
         localStorage.getItem('adore_admin_token') || '';
 
     let tab = 'dashboard';
+    let allProductsCache = [];
+    let productSearchQuery = '';
 
 
    const api = async (path, opt = {}) => {
@@ -1056,6 +1150,8 @@
             'logoutBtn'
         ).style.visibility = 'visible';
 
+        document.getElementById('topSearchWrap').classList.remove('hidden');
+
         load();
     }
 
@@ -1073,6 +1169,8 @@
         document.getElementById(
             'logoutBtn'
         ).style.visibility = 'hidden';
+
+        document.getElementById('topSearchWrap').classList.add('hidden');
     }
 
 
@@ -1247,9 +1345,8 @@
             }
 
             if (tab === 'products') {
-                renderProducts(
-                    await api('/api/admin/products')
-                );
+                allProductsCache = await api('/api/admin/products');
+                renderProducts(allProductsCache);
             }
 
             if (tab === 'services') {
@@ -1314,6 +1411,20 @@
             );
 
         load();
+    }
+
+
+    function handleProductSearch(value) {
+        productSearchQuery = value.trim().toLowerCase();
+
+        if (productSearchQuery && tab !== 'products') {
+            goTab('products');
+            return;
+        }
+
+        if (tab === 'products') {
+            renderProducts(allProductsCache);
+        }
     }
 
 
@@ -1477,97 +1588,113 @@
        PRODUCTS
     ========================================================= */
 
+    function getProductType(product) {
+        if (product.productType) {
+            return String(product.productType).toUpperCase();
+        }
+
+        const wigCategories = ['lace', 'body-wave', 'curly', 'colored', 'closure'];
+        return !product.category || wigCategories.includes(product.category)
+            ? 'WIG'
+            : 'OTHER';
+    }
+
+
     function renderProducts(xs) {
 
-        const content =
-            document.getElementById('content');
-
+        const content = document.getElementById('content');
         const categoryLabels = {
             'lace': 'Lace Front',
             'body-wave': 'Body Wave',
             'curly': 'Curly',
             'colored': 'Colored',
-            'closure': 'Closure'
+            'closure': 'Closure',
+            'perfume': 'Perfume',
+            'hair-care': 'Hair Care',
+            'accessories': 'Accessories',
+            'other': 'Other'
         };
 
-        content.innerHTML = `
+        const matchingProducts = xs.filter(product => {
+            if (!productSearchQuery) return true;
 
+            return [
+                product.name,
+                product.description,
+                categoryLabels[product.category] || product.category,
+                getProductType(product) === 'WIG' ? 'wig' : 'other product'
+            ].some(value => String(value || '').toLowerCase().includes(productSearchQuery));
+        });
+
+        const wigs = matchingProducts.filter(product => getProductType(product) === 'WIG');
+        const otherProducts = matchingProducts.filter(product => getProductType(product) === 'OTHER');
+
+        const cards = products => products.length ? `
+            <div class="item-grid">
+                ${products.map(x => `
+                    <div class="item-card">
+                        ${x.imageUrl
+                            ? `<img class="item-thumb" src="${esc(x.imageUrl)}" alt="${esc(x.name)}">`
+                            : `<div class="item-thumb-icon"><i class="fa-solid fa-image"></i></div>`}
+
+                        <div class="item-body">
+                            <div class="item-title">${esc(x.name)}</div>
+                            <div class="item-meta">
+                                <span class="pill gold">GH₵ ${esc(x.price)}</span>
+                                ${x.category
+                                    ? `<span class="pill off">${esc(categoryLabels[x.category] || x.category)}</span>`
+                                    : ''}
+                                ${x.featured ? `<span class="pill ok"><i class="fa-solid fa-star"></i> Featured</span>` : ''}
+                                ${x.active === false ? `<span class="pill danger">Hidden</span>` : ''}
+                            </div>
+                            ${x.description ? `<div class="item-desc">${esc(x.description)}</div>` : ''}
+                            <div class="item-actions">
+                                <button class="btn secondary small" onclick='productForm(${arg(x)})'>
+                                    <i class="fa-solid fa-pen"></i> Edit
+                                </button>
+                                <button class="btn danger small" onclick="del('products', ${x.id})">
+                                    <i class="fa-solid fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : `
+            <div class="empty-state">
+                <i class="fa-solid fa-box-open"></i>
+                ${productSearchQuery ? 'No matching products in this group.' : 'No products in this group yet.'}
+            </div>
+        `;
+
+        content.innerHTML = `
             <div class="section-head">
                 <div>
-                    <h2><i class="fa-solid fa-bag-shopping" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>Products</h2>
-                    <p>Add and manage wigs and other products (${xs.length} total).</p>
+                    <h2><i class="fa-solid fa-bag-shopping" style="color:var(--gold);font-size:18px;margin-right:8px;"></i>All Products</h2>
+                    <p>Wigs and other products are managed in separate groups (${xs.length} total).</p>
                 </div>
-
-                <button
-                    class="btn primary"
-                    onclick="productForm()">
-                    <i class="fa-solid fa-plus"></i>
-                    Add product
+                <button class="btn primary" onclick="productForm()">
+                    <i class="fa-solid fa-plus"></i> Add product
                 </button>
             </div>
 
             <div id="form"></div>
 
-            ${xs.length ? `
-                <div class="item-grid">
-
-                    ${xs.map(x => `
-
-                        <div class="item-card">
-
-                            ${x.imageUrl
-                                ? `<img class="item-thumb" src="${esc(x.imageUrl)}" alt="${esc(x.name)}">`
-                                : `<div class="item-thumb-icon"><i class="fa-solid fa-image"></i></div>`
-                            }
-
-                            <div class="item-body">
-
-                                <div class="item-title">${esc(x.name)}</div>
-
-                                <div class="item-meta">
-                                    <span class="pill gold">GH₵ ${esc(x.price)}</span>
-                                    ${x.category
-                                        ? `<span class="pill off">${esc(categoryLabels[x.category] || x.category)}</span>`
-                                        : ''}
-                                    ${x.featured ? `<span class="pill ok"><i class="fa-solid fa-star"></i> Featured</span>` : ''}
-                                    ${x.active === false ? `<span class="pill danger">Hidden</span>` : ''}
-                                </div>
-
-                                ${x.description
-                                    ? `<div class="item-desc">${esc(x.description)}</div>`
-                                    : ''}
-
-                                <div class="item-actions">
-
-                                    <button
-                                        class="btn secondary small"
-                                        onclick='productForm(${arg(x)})'>
-                                        <i class="fa-solid fa-pen"></i>
-                                        Edit
-                                    </button>
-
-                                    <button
-                                        class="btn danger small"
-                                        onclick="del('products', ${x.id})">
-                                        <i class="fa-solid fa-trash"></i>
-                                        Delete
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    `).join('')}
-
+            <section class="product-group">
+                <div class="product-group-head">
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Wigs</h3>
+                    <span class="pill gold">${wigs.length}</span>
                 </div>
-            ` : `
-                <div class="empty-state">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    No products yet. Add your first wig to get started.
+                ${cards(wigs)}
+            </section>
+
+            <section class="product-group">
+                <div class="product-group-head">
+                    <h3><i class="fa-solid fa-boxes-stacked"></i> Other Products</h3>
+                    <span class="pill gold">${otherProducts.length}</span>
                 </div>
-            `}
+                ${cards(otherProducts)}
+            </section>
         `;
     }
 
@@ -1627,56 +1754,21 @@
 
                     <label>
 
+                        Product type
+
+                        <select id="ptype" onchange="updateProductCategoryOptions()">
+                            <option value="WIG" ${getProductType(x) === 'WIG' ? 'selected' : ''}>Wig</option>
+                            <option value="OTHER" ${getProductType(x) === 'OTHER' ? 'selected' : ''}>Other product</option>
+                        </select>
+
+                    </label>
+
+
+                    <label>
+
                         Category
 
                         <select id="pcat">
-
-                            <option
-                                value=""
-                                ${!x.category ? 'selected' : ''}>
-                                Select category
-                            </option>
-
-                            <option
-                                value="lace"
-                                ${x.category === 'lace'
-                                    ? 'selected'
-                                    : ''}>
-                                Lace Front
-                            </option>
-
-                            <option
-                                value="body-wave"
-                                ${x.category === 'body-wave'
-                                    ? 'selected'
-                                    : ''}>
-                                Body Wave
-                            </option>
-
-                            <option
-                                value="curly"
-                                ${x.category === 'curly'
-                                    ? 'selected'
-                                    : ''}>
-                                Curly
-                            </option>
-
-                            <option
-                                value="colored"
-                                ${x.category === 'colored'
-                                    ? 'selected'
-                                    : ''}>
-                                Colored
-                            </option>
-
-                            <option
-                                value="closure"
-                                ${x.category === 'closure'
-                                    ? 'selected'
-                                    : ''}>
-                                Closure
-                            </option>
-
                         </select>
 
                     </label>
@@ -1787,7 +1879,7 @@
 
                     <textarea
                         id="pdesc"
-                        placeholder="Describe the wig...">${esc(x.description || '')}</textarea>
+                        placeholder="Describe the product...">${esc(x.description || '')}</textarea>
 
                 </label>
 
@@ -1838,6 +1930,35 @@
 
             </div>
         `;
+
+        updateProductCategoryOptions(x.category || '');
+    }
+
+
+    function updateProductCategoryOptions(selectedCategory = '') {
+        const type = document.getElementById('ptype').value;
+        const category = document.getElementById('pcat');
+        const options = type === 'WIG'
+            ? [
+                ['', 'Select wig category'],
+                ['lace', 'Lace Front'],
+                ['body-wave', 'Body Wave'],
+                ['curly', 'Curly'],
+                ['colored', 'Colored'],
+                ['closure', 'Closure']
+              ]
+            : [
+                ['', 'Select product category'],
+                ['perfume', 'Perfume'],
+                ['hair-care', 'Hair Care'],
+                ['accessories', 'Accessories'],
+                ['other', 'Other']
+              ];
+
+        const currentValue = selectedCategory || category.value;
+        category.innerHTML = options.map(([value, label]) =>
+            `<option value="${value}" ${value === currentValue ? 'selected' : ''}>${label}</option>`
+        ).join('');
     }
 
 
@@ -2013,6 +2134,9 @@
             document.getElementById('pimg')
                 .value;
 
+        const productType = document.getElementById('ptype').value;
+        const category = document.getElementById('pcat').value;
+
 
         if (!name) {
 
@@ -2046,6 +2170,11 @@
             return;
         }
 
+        if (!category) {
+            alert('Please select a category for this product.');
+            return;
+        }
+
 
         const body = {
 
@@ -2067,10 +2196,9 @@
 
                     : null,
 
-            category:
-                document
-                    .getElementById('pcat')
-                    .value,
+            productType,
+
+            category,
 
             tag:
                 document
