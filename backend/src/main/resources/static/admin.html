@@ -710,6 +710,78 @@
             cursor: pointer;
         }
 
+        .cat-manager-modal {
+            width: min(520px, 100%);
+        }
+
+        .cat-add-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .cat-add-row input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-family: var(--sans);
+            font-size: 14px;
+            background: #fff;
+            color: var(--black);
+        }
+
+        .cat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .cat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 11px 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--cream);
+        }
+
+        .cat-row .cat-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .cat-row .cat-slug {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: var(--mono, monospace);
+        }
+
+        .cat-row button {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .cat-row button:hover {
+            background: #fbe3e3;
+            color: #c0392b;
+        }
+
+        .cat-manager-empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 24px 10px;
+            font-size: 14px;
+        }
+
         .item-card {
             border: 1px solid var(--line);
             border-radius: 14px;
@@ -1223,6 +1295,9 @@
         html[data-theme="dark"] .product-form-modal,
         html[data-theme="dark"] .product-form-head{background:#171615;border-color:#3a3328}
         html[data-theme="dark"] .modal-close{background:#26221d;color:#f2ece3}
+        html[data-theme="dark"] .cat-add-row input{background:#171615;border-color:#3a3328;color:#f2ece3}
+        html[data-theme="dark"] .cat-row{background:#1b1917;border-color:#3a3328}
+        html[data-theme="dark"] .cat-row button:hover{background:#3a2323;color:#f5a3a3}
         html[data-theme="dark"] .admin-records.grid-view .msg-item,
         html[data-theme="dark"] .image-preview-item{background:#171615}
         html[data-theme="dark"] .stat-icon{background:#26221d}
@@ -1392,6 +1467,7 @@
     let pendingProductImages = [];
     let adminProductGroup = 'WIG';
     let adminListLayout = localStorage.getItem('adore_admin_layout') || 'list';
+    let hairCategoriesCache = [];
 
 
    const api = async (path, opt = {}) => {
@@ -1660,7 +1736,12 @@
             }
 
             if (tab === 'products') {
-                allProductsCache = await api('/api/admin/products');
+                const [productsList, categoriesList] = await Promise.all([
+                    api('/api/admin/products'),
+                    api('/api/admin/hair-categories')
+                ]);
+                allProductsCache = productsList;
+                hairCategoriesCache = categoriesList;
                 renderProducts(allProductsCache);
             }
 
@@ -1908,10 +1989,24 @@
             return String(product.productType).toUpperCase();
         }
 
-        const wigCategories = ['lace', 'body-wave', 'curly', 'colored', 'closure'];
-        return !product.category || wigCategories.includes(product.category)
+        const wigSlugs = hairCategoriesCache.map(c => c.slug);
+        return !product.category || wigSlugs.includes(product.category)
             ? 'WIG'
             : 'OTHER';
+    }
+
+    const OTHER_CATEGORY_LABELS = {
+        'perfume': 'Perfume',
+        'hair-care': 'Hair Care',
+        'accessories': 'Accessories',
+        'other': 'Other'
+    };
+
+    function categoryLabel(slug) {
+        if (!slug) return slug;
+        const wigCat = hairCategoriesCache.find(c => c.slug === slug);
+        if (wigCat) return wigCat.name;
+        return OTHER_CATEGORY_LABELS[slug] || slug;
     }
 
     function selectProductGroup(group) {
@@ -1943,17 +2038,6 @@
     function renderProducts(xs) {
 
         const content = document.getElementById('content');
-        const categoryLabels = {
-            'lace': 'Lace Front',
-            'body-wave': 'Body Wave',
-            'curly': 'Curly',
-            'colored': 'Colored',
-            'closure': 'Closure',
-            'perfume': 'Perfume',
-            'hair-care': 'Hair Care',
-            'accessories': 'Accessories',
-            'other': 'Other'
-        };
 
         const matchingProducts = xs.filter(product => {
             if (!productSearchQuery) return true;
@@ -1961,7 +2045,7 @@
             return [
                 product.name,
                 product.description,
-                categoryLabels[product.category] || product.category,
+                categoryLabel(product.category),
                 getProductType(product) === 'WIG' ? 'wig' : 'other product'
             ].some(value => String(value || '').toLowerCase().includes(productSearchQuery));
         });
@@ -1982,7 +2066,7 @@
                             <div class="item-meta">
                                 <span class="pill gold">GH₵ ${esc(x.price)}</span>
                                 ${x.category
-                                    ? `<span class="pill off">${esc(categoryLabels[x.category] || x.category)}</span>`
+                                    ? `<span class="pill off">${esc(categoryLabel(x.category))}</span>`
                                     : ''}
                                 ${x.featured ? `<span class="pill ok"><i class="fa-solid fa-star"></i> Featured</span>` : ''}
                                 ${x.active === false ? `<span class="pill danger">Hidden</span>` : ''}
@@ -2040,6 +2124,11 @@
                         ? '<i class="fa-solid fa-wand-magic-sparkles"></i> Wigs'
                         : '<i class="fa-solid fa-boxes-stacked"></i> Other Products'}</h3>
                     <span class="pill gold">${adminProductGroup === 'WIG' ? wigs.length : otherProducts.length}</span>
+                    ${adminProductGroup === 'WIG'
+                        ? `<button class="btn secondary small" style="margin-left:auto" onclick="openCategoryManager()">
+                               <i class="fa-solid fa-tags"></i> Manage Hair Categories
+                           </button>`
+                        : ''}
                 </div>
                 ${cards(adminProductGroup === 'WIG' ? wigs : otherProducts)}
             </section>
@@ -2307,11 +2396,7 @@
         const options = type === 'WIG'
             ? [
                 ['', 'Select wig category'],
-                ['lace', 'Lace Front'],
-                ['body-wave', 'Body Wave'],
-                ['curly', 'Curly'],
-                ['colored', 'Colored'],
-                ['closure', 'Closure']
+                ...hairCategoriesCache.map(c => [c.slug, c.name])
               ]
             : [
                 ['', 'Select product category'],
@@ -2325,6 +2410,127 @@
         category.innerHTML = options.map(([value, label]) =>
             `<option value="${value}" ${value === currentValue ? 'selected' : ''}>${label}</option>`
         ).join('');
+    }
+
+
+    /* =========================================================
+       HAIR CATEGORY MANAGER (wig categories)
+    ========================================================= */
+
+    async function openCategoryManager() {
+        try {
+            hairCategoriesCache = await api('/api/admin/hair-categories');
+        } catch (e) {
+            alert('Could not load hair categories. Please try again.');
+            return;
+        }
+
+        renderCategoryManager();
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCategoryManager() {
+        const el = document.getElementById('categoryManagerRoot');
+        if (el) el.remove();
+        if (!document.querySelector('.product-form-overlay')) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    function renderCategoryManager() {
+        let root = document.getElementById('categoryManagerRoot');
+        if (!root) {
+            root = document.createElement('div');
+            root.id = 'categoryManagerRoot';
+            document.body.appendChild(root);
+        }
+
+        root.innerHTML = `
+            <div class="product-form-overlay" onclick="if(event.target === this) closeCategoryManager()">
+            <div class="card product-form-modal cat-manager-modal">
+
+                <div class="product-form-head">
+                    <h3><i class="fa-solid fa-tags" style="color:var(--gold);font-size:15px;margin-right:6px;"></i>Manage Hair Categories</h3>
+                    <button type="button" class="modal-close" onclick="closeCategoryManager()" aria-label="Close category manager">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <p style="color:var(--muted);font-size:13px;margin:-6px 0 16px">
+                    These categories appear as filters on the website and in the category dropdown when adding or editing a wig.
+                </p>
+
+                <div class="cat-add-row">
+                    <input id="newCatName" type="text" placeholder="e.g. Water Wave" onkeydown="if(event.key==='Enter'){event.preventDefault();submitNewHairCategory();}">
+                    <button class="btn primary" onclick="submitNewHairCategory()">
+                        <i class="fa-solid fa-plus"></i> Add
+                    </button>
+                </div>
+
+                <div class="cat-list">
+                    ${hairCategoriesCache.length ? hairCategoriesCache.map(c => `
+                        <div class="cat-row">
+                            <div>
+                                <div class="cat-name">${esc(c.name)}</div>
+                                <div class="cat-slug">${esc(c.slug)}</div>
+                            </div>
+                            <button onclick="removeHairCategory(${c.id})" title="Remove category">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('') : `
+                        <div class="cat-manager-empty">
+                            <i class="fa-solid fa-tags" style="font-size:20px;margin-bottom:8px;display:block"></i>
+                            No hair categories yet. Add your first one above.
+                        </div>
+                    `}
+                </div>
+
+            </div>
+            </div>
+        `;
+    }
+
+    async function submitNewHairCategory() {
+        const input = document.getElementById('newCatName');
+        const name = input.value.trim();
+
+        if (!name) {
+            input.focus();
+            return;
+        }
+
+        try {
+            const saved = await api('/api/admin/hair-categories', {
+                method: 'POST',
+                body: JSON.stringify({ name })
+            });
+            hairCategoriesCache = [...hairCategoriesCache, saved];
+            renderCategoryManager();
+            if (document.getElementById('ptype') && document.getElementById('pcat')) {
+                updateProductCategoryOptions();
+            }
+        } catch (e) {
+            alert(e.message || 'Could not add that category.');
+        }
+    }
+
+    async function removeHairCategory(id) {
+        const category = hairCategoriesCache.find(c => c.id === id);
+        if (!category) return;
+
+        if (!confirm(`Remove the "${category.name}" category?`)) return;
+
+        try {
+            await api(`/api/admin/hair-categories/${id}`, { method: 'DELETE' });
+            hairCategoriesCache = hairCategoriesCache.filter(c => c.id !== id);
+            renderCategoryManager();
+            if (document.getElementById('ptype') && document.getElementById('pcat')) {
+                updateProductCategoryOptions();
+            }
+        } catch (e) {
+            alert(e.message || 'Could not remove that category.');
+        }
     }
 
 

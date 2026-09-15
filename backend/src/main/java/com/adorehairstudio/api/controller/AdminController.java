@@ -1,6 +1,7 @@
 package com.adorehairstudio.api.controller;
 
 import com.adorehairstudio.api.model.ContactMessage;
+import com.adorehairstudio.api.model.HairCategory;
 import com.adorehairstudio.api.model.Product;
 import com.adorehairstudio.api.model.Review;
 import com.adorehairstudio.api.model.ServiceItem;
@@ -8,6 +9,7 @@ import com.adorehairstudio.api.model.SiteSettings;
 import com.adorehairstudio.api.model.Testimonial;
 
 import com.adorehairstudio.api.repo.ContactMessageRepository;
+import com.adorehairstudio.api.repo.HairCategoryRepository;
 import com.adorehairstudio.api.repo.ProductRepository;
 import com.adorehairstudio.api.repo.ReviewRepository;
 import com.adorehairstudio.api.repo.ServiceItemRepository;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -33,6 +36,7 @@ public class AdminController {
     private final ContactMessageRepository messageRepository;
     private final SiteSettingsRepository settingsRepository;
     private final ReviewRepository reviewRepository;
+    private final HairCategoryRepository hairCategoryRepository;
 
 
     public AdminController(
@@ -41,7 +45,8 @@ public class AdminController {
             TestimonialRepository testimonialRepository,
             ContactMessageRepository messageRepository,
             SiteSettingsRepository settingsRepository,
-            ReviewRepository reviewRepository
+            ReviewRepository reviewRepository,
+            HairCategoryRepository hairCategoryRepository
     ) {
         this.productRepository = productRepository;
         this.serviceRepository = serviceRepository;
@@ -49,6 +54,7 @@ public class AdminController {
         this.messageRepository = messageRepository;
         this.settingsRepository = settingsRepository;
         this.reviewRepository = reviewRepository;
+        this.hairCategoryRepository = hairCategoryRepository;
     }
 
 
@@ -294,6 +300,78 @@ public class AdminController {
         }
 
         reviewRepository.deleteById(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+
+    // =========================================================
+    // HAIR CATEGORIES (wig categories)
+    // =========================================================
+
+    @GetMapping("/hair-categories")
+    public List<HairCategory> hairCategories() {
+        return hairCategoryRepository.findAllByOrderByDisplayOrderAscIdAsc();
+    }
+
+
+    @PostMapping("/hair-categories")
+    public ResponseEntity<?> addHairCategory(@RequestBody Map<String, String> body) {
+
+        String name = body.get("name") == null ? "" : body.get("name").trim();
+
+        if (name.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Category name is required."));
+        }
+
+        String baseSlug = name.toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-+|-+$)", "");
+
+        if (baseSlug.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Please use a valid category name."));
+        }
+
+        String slug = baseSlug;
+        int suffix = 2;
+        while (hairCategoryRepository.existsBySlug(slug)) {
+            slug = baseSlug + "-" + suffix;
+            suffix++;
+        }
+
+        int nextOrder = hairCategoryRepository.findAllByOrderByDisplayOrderAscIdAsc().size();
+
+        HairCategory category = new HairCategory();
+        category.setName(name);
+        category.setSlug(slug);
+        category.setDisplayOrder(nextOrder);
+
+        HairCategory saved = hairCategoryRepository.save(category);
+
+        return ResponseEntity.status(201).body(saved);
+    }
+
+
+    @DeleteMapping("/hair-categories/{id}")
+    public ResponseEntity<?> deleteHairCategory(@PathVariable Long id) {
+
+        HairCategory category = hairCategoryRepository.findById(id).orElse(null);
+
+        if (category == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        long inUse = productRepository.countByCategory(category.getSlug());
+
+        if (inUse > 0) {
+            return ResponseEntity.status(409).body(Map.of(
+                    "message",
+                    "Can't remove \"" + category.getName() + "\" — " + inUse +
+                            " product" + (inUse == 1 ? "" : "s") + " still use" + (inUse == 1 ? "s" : "") + " this category."
+            ));
+        }
+
+        hairCategoryRepository.deleteById(id);
 
         return ResponseEntity.noContent().build();
     }

@@ -536,13 +536,8 @@ html[data-theme="dark"] footer{background:#050505}
     <h2 class="section-title">Our <em>Premium</em> Wigs</h2>
     <p class="section-sub" style="margin:0 auto">Every wig is crafted from 100% premium human hair — silky, natural, and endlessly versatile.</p>
   </div>
-  <div class="filter-row reveal">
+  <div class="filter-row reveal" id="filterRow">
     <button class="ftab active" data-filter="all">All Wigs</button>
-    <button class="ftab" data-filter="lace">Lace Front</button>
-    <button class="ftab" data-filter="body-wave">Body Wave</button>
-    <button class="ftab" data-filter="curly">Curly</button>
-    <button class="ftab" data-filter="colored">Colored</button>
-    <button class="ftab" data-filter="closure">Closure</button>
   </div>
   <div class="products-grid" id="productsGrid"></div>
 
@@ -894,6 +889,7 @@ document.addEventListener('DOMContentLoaded',()=>applyTheme(document.documentEle
 let cart=[];
 let productSearchQuery='';
 let activeWigFilter='all';
+let HAIR_CATEGORIES=[];
 
 function matchesProductSearch(product){
   if(!productSearchQuery)return true;
@@ -903,8 +899,24 @@ function matchesProductSearch(product){
 
 function isWig(product){
   if(product.productType)return String(product.productType).toUpperCase()==='WIG';
-  const wigCategories=['lace','body-wave','curly','colored','closure'];
-  return !product.cat||wigCategories.includes(product.cat);
+  const wigCategorySlugs=HAIR_CATEGORIES.map(c=>c.slug);
+  return !product.cat||wigCategorySlugs.includes(product.cat);
+}
+
+function renderWigFilters(){
+  const row=document.getElementById('filterRow');
+  if(!row)return;
+  const buttons=['<button class="ftab'+(activeWigFilter==='all'?' active':'')+'" data-filter="all">All Wigs</button>']
+    .concat(HAIR_CATEGORIES.map(c=>`<button class="ftab${activeWigFilter===c.slug?' active':''}" data-filter="${esc(c.slug)}">${esc(c.name)}</button>`));
+  row.innerHTML=buttons.join('');
+  row.querySelectorAll('.ftab').forEach(tab=>{
+    tab.addEventListener('click',function(){
+      row.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+      this.classList.add('active');
+      activeWigFilter=this.dataset.filter;
+      renderProducts();
+    });
+  });
 }
 
 function renderProducts(filter=activeWigFilter){
@@ -984,15 +996,6 @@ function nextSlide(){currentSlide=(currentSlide+1)%TESTIMONIALS.length;updateSli
 function prevSlide(){currentSlide=(currentSlide-1+TESTIMONIALS.length)%TESTIMONIALS.length;updateSlider();}
 function goSlide(i){currentSlide=i;updateSlider();}
 setInterval(nextSlide,5500);
-
-document.querySelectorAll('.ftab').forEach(tab=>{
-  tab.addEventListener('click',function(){
-    document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
-    this.classList.add('active');
-    activeWigFilter=this.dataset.filter;
-    renderProducts();
-  });
-});
 
 function handleMainSearch(value){
   productSearchQuery=value.trim().toLowerCase();
@@ -1274,19 +1277,21 @@ async function submitForm(){
 
 async function loadSiteData(){
   try{
-    const [pr,sv,ft,ts,st]=await Promise.all([
+    const [pr,sv,ft,ts,st,hc]=await Promise.all([
       fetch(API_BASE+'/api/public/products').then(r=>r.ok?r.json():Promise.reject()),
       fetch(API_BASE+'/api/public/services').then(r=>r.ok?r.json():Promise.reject()),
       fetch(API_BASE+'/api/public/featured').then(r=>r.ok?r.json():Promise.reject()),
       fetch(API_BASE+'/api/public/testimonials').then(r=>r.ok?r.json():Promise.reject()),
-      fetch(API_BASE+'/api/public/settings').then(r=>r.ok?r.json():Promise.reject())
+      fetch(API_BASE+'/api/public/settings').then(r=>r.ok?r.json():Promise.reject()),
+      fetch(API_BASE+'/api/public/hair-categories').then(r=>r.ok?r.json():Promise.reject()).catch(()=>[])
     ]);
     PRODUCTS=pr.map(p=>({...p,img:p.imageUrl,desc:p.description,cat:p.category}));
     SERVICES=sv.map(x=>({...x,price:x.priceLabel,desc:x.description}));
     FEATURED=ft.map(p=>({...p,img:p.imageUrl,desc:p.description,cat:p.category}));
     TESTIMONIALS=ts;
+    HAIR_CATEGORIES=hc;
     document.getElementById('productsGrid').innerHTML=''; document.getElementById('otherProductsGrid').innerHTML=''; document.getElementById('servicesGrid').innerHTML=''; document.getElementById('featuredGrid').innerHTML=''; document.getElementById('slidesTrack').innerHTML=''; document.getElementById('sliderDots').innerHTML='';
-    renderProducts();renderOtherProducts();renderServices();renderFeatured();renderTestimonials();
+    renderWigFilters();renderProducts();renderOtherProducts();renderServices();renderFeatured();renderTestimonials();
     applySettings(st);
   }catch(e){
     console.error('Backend unavailable',e);
