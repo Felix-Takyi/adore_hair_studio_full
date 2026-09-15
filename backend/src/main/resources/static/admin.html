@@ -1163,6 +1163,13 @@
                 grid-template-columns: 1fr;
             }
 
+            input,
+            textarea,
+            select,
+            .cat-add-row input {
+                font-size: 16px;
+            }
+
             .row {
                 flex-direction: column;
             }
@@ -1466,6 +1473,7 @@
     let productSearchQuery = '';
     let pendingProductImages = [];
     let adminProductGroup = 'WIG';
+    let adminWigCategoryFilter = 'all';
     let adminListLayout = localStorage.getItem('adore_admin_layout') || 'list';
     let hairCategoriesCache = [];
 
@@ -1489,10 +1497,13 @@
     }
 
     if (!response.ok) {
-        const message = await response.text();
-        throw new Error(
-            message || 'Request failed'
-        );
+        const raw = await response.text();
+        let parsed = null;
+        try { parsed = raw ? JSON.parse(raw) : null; } catch (parseErr) { parsed = null; }
+        const err = new Error((parsed && parsed.message) || raw || 'Request failed');
+        err.status = response.status;
+        err.body = parsed;
+        throw err;
     }
 
     if (response.status === 204) {
@@ -2011,6 +2022,12 @@
 
     function selectProductGroup(group) {
         adminProductGroup = group;
+        adminWigCategoryFilter = 'all';
+        renderProducts(allProductsCache);
+    }
+
+    function toggleUnassignedWigsFilter() {
+        adminWigCategoryFilter = adminWigCategoryFilter === 'unassigned' ? 'all' : 'unassigned';
         renderProducts(allProductsCache);
     }
 
@@ -2052,6 +2069,8 @@
 
         const wigs = matchingProducts.filter(product => getProductType(product) === 'WIG');
         const otherProducts = matchingProducts.filter(product => getProductType(product) === 'OTHER');
+        const unassignedWigs = wigs.filter(product => !product.category);
+        const wigsToShow = adminWigCategoryFilter === 'unassigned' ? unassignedWigs : wigs;
 
         const cards = products => products.length ? `
             <div class="item-grid ${adminListLayout === 'list' ? 'list-view' : ''}">
@@ -2121,16 +2140,30 @@
             <section class="product-group">
                 <div class="product-group-head">
                     <h3>${adminProductGroup === 'WIG'
-                        ? '<i class="fa-solid fa-wand-magic-sparkles"></i> Wigs'
+                        ? (adminWigCategoryFilter === 'unassigned'
+                            ? '<i class="fa-solid fa-triangle-exclamation"></i> Unassigned Wigs'
+                            : '<i class="fa-solid fa-wand-magic-sparkles"></i> Wigs')
                         : '<i class="fa-solid fa-boxes-stacked"></i> Other Products'}</h3>
-                    <span class="pill gold">${adminProductGroup === 'WIG' ? wigs.length : otherProducts.length}</span>
+                    <span class="pill gold">${adminProductGroup === 'WIG' ? wigsToShow.length : otherProducts.length}</span>
+                    ${adminProductGroup === 'WIG' && unassignedWigs.length ? `
+                        <button class="btn ${adminWigCategoryFilter === 'unassigned' ? 'primary' : 'secondary'} small" onclick="toggleUnassignedWigsFilter()">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            ${adminWigCategoryFilter === 'unassigned' ? 'Show All Wigs' : `Unassigned (${unassignedWigs.length})`}
+                        </button>
+                    ` : ''}
                     ${adminProductGroup === 'WIG'
                         ? `<button class="btn secondary small" style="margin-left:auto" onclick="openCategoryManager()">
                                <i class="fa-solid fa-tags"></i> Manage Hair Categories
                            </button>`
                         : ''}
                 </div>
-                ${cards(adminProductGroup === 'WIG' ? wigs : otherProducts)}
+                ${adminProductGroup === 'WIG' && unassignedWigs.length ? `
+                    <p style="color:var(--muted);font-size:13px;margin:-6px 0 16px">
+                        These wigs lost their category when it was removed. They're hidden from the website —
+                        edit each one to give it a category and switch it back to Active.
+                    </p>
+                ` : ''}
+                ${cards(adminProductGroup === 'WIG' ? wigsToShow : otherProducts)}
             </section>
         `;
     }
@@ -2523,13 +2556,41 @@
 
         try {
             await api(`/api/admin/hair-categories/${id}`, { method: 'DELETE' });
-            hairCategoriesCache = hairCategoriesCache.filter(c => c.id !== id);
-            renderCategoryManager();
-            if (document.getElementById('ptype') && document.getElementById('pcat')) {
-                updateProductCategoryOptions();
-            }
+            afterHairCategoryRemoved(id);
         } catch (e) {
-            alert(e.message || 'Could not remove that category.');
+            if (e.status === 409) {
+                const count = (e.body && e.body.productCount) || 0;
+
+                const moveConfirm = confirm(
+                    `"${category.name}" is still used by ${count} product${count === 1 ? '' : 's'}.\n\n` +
+                    `Move ${count === 1 ? 'it' : 'them'} to Unassigned Wigs instead? ` +
+                    `${count === 1 ? 'It' : 'They'} will be hidden from the website but kept here in your admin ` +
+                    `list so you can give ${count === 1 ? 'it' : 'them'} a new category later.`
+                );
+
+                if (!moveConfirm) return;
+
+                try {
+                    await api(`/api/admin/hair-categories/${id}?moveToUnassigned=true`, { method: 'DELETE' });
+                    afterHairCategoryRemoved(id);
+                } catch (e2) {
+                    alert(e2.message || 'Could not remove that category.');
+                }
+            } else {
+                alert(e.message || 'Could not remove that category.');
+            }
+        }
+    }
+
+    async function afterHairCategoryRemoved(id) {
+        hairCategoriesCache = hairCategoriesCache.filter(c => c.id !== id);
+        renderCategoryManager();
+        if (document.getElementById('ptype') && document.getElementById('pcat')) {
+            updateProductCategoryOptions();
+        }
+        if (tab === 'products') {
+            allProductsCache = await api('/api/admin/products');
+            renderProducts(allProductsCache);
         }
     }
 
@@ -2595,15 +2656,71 @@
         }
     }
 
+    function pickRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function buildWigDescription(name, category, tag) {
+        const openers = [
+            `${name} brings ${category} texture to life with a soft, natural finish.`,
+            `Meet ${name} — a ${category} wig built for an effortless, natural look.`,
+            `${name} is crafted in a ${category} pattern that moves and falls like real hair.`,
+            `Step into ${name}, a ${category} wig designed for everyday confidence.`,
+            `${name} delivers salon-fresh ${category} styling you can wear straight out of the box.`
+        ];
+        const middles = [
+            `The cap sits comfortably against the scalp while the hairline blends seamlessly for an undetectable finish.`,
+            `Lightweight and breathable, it stays comfortable through long days without sacrificing hold or shape.`,
+            `Each strand is hand-tied for natural movement, so it catches light and flows the way real hair does.`,
+            `It's soft to the touch, holds its pattern well, and resists tangling with the right care.`,
+            `The construction keeps it secure and natural-looking, even through active days.`
+        ];
+        const closers = [
+            `Perfect for everyday wear, special occasions, or whenever you want a flawless change of style.`,
+            `A great pick whether you're switching up your look for the week or getting ready for a big event.`,
+            `Style it straight, curl it, or wear it as-is — it holds up beautifully either way.`,
+            `Ready to wear the moment it arrives, with minimal styling needed to look salon-fresh.`,
+            tag
+                ? `${tag} for a reason — it's one of our most requested ${category} styles.`
+                : `A dependable choice for anyone who wants quality hair without the guesswork.`
+        ];
+        return `${pickRandom(openers)} ${pickRandom(middles)} ${pickRandom(closers)}`;
+    }
+
+    function buildOtherDescription(name, category, tag) {
+        const openers = [
+            `${name} is a ${category} pick made to fit right into your beauty routine.`,
+            `Meet ${name} — a dependable ${category} choice for everyday use.`,
+            `${name} brings quality and convenience together in one ${category} essential.`,
+            `Add ${name} to your routine for a reliable, well-made ${category} product.`
+        ];
+        const middles = [
+            `It's built with quality materials and a refined finish that holds up to regular use.`,
+            `Simple to use and easy to love, it fits naturally into any routine.`,
+            `Thoughtfully made with attention to detail, from the packaging to the finish.`,
+            `Reliable, well-made, and designed to deliver consistent results every time.`
+        ];
+        const closers = [
+            `A great addition whether you're stocking up or trying it for the first time.`,
+            `Makes a thoughtful gift or a welcome treat for yourself.`,
+            tag
+                ? `${tag} — customers keep coming back for it.`
+                : `A small upgrade that makes a real difference day to day.`,
+            `Available now and ready to become part of your everyday routine.`
+        ];
+        return `${pickRandom(openers)} ${pickRandom(middles)} ${pickRandom(closers)}`;
+    }
+
     function generateProductDescription() {
         const name = document.getElementById('pname').value.trim();
         const type = document.getElementById('ptype').value;
         const categorySelect = document.getElementById('pcat');
-        const category = categorySelect.options[categorySelect.selectedIndex]?.text || 'product';
+        const category = (categorySelect.options[categorySelect.selectedIndex]?.text || 'product').toLowerCase();
+        const tag = document.getElementById('ptag').value.trim();
         if (!name) { alert('Enter the product name first.'); return; }
         const description = type === 'WIG'
-            ? `${name} is a beautifully finished ${category.toLowerCase()} wig designed for a natural, confident look. It offers comfortable wear, elegant movement and versatile styling for everyday use or special occasions.`
-            : `${name} is a carefully selected ${category.toLowerCase()} product created to complement your beauty routine. It combines quality, convenience and a refined finish for dependable everyday use.`;
+            ? buildWigDescription(name, category, tag)
+            : buildOtherDescription(name, category, tag);
         document.getElementById('pdesc').value = description;
     }
 

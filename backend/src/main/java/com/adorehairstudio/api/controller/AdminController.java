@@ -353,7 +353,10 @@ public class AdminController {
 
 
     @DeleteMapping("/hair-categories/{id}")
-    public ResponseEntity<?> deleteHairCategory(@PathVariable Long id) {
+    public ResponseEntity<?> deleteHairCategory(
+            @PathVariable Long id,
+            @RequestParam(name = "moveToUnassigned", required = false, defaultValue = "false") boolean moveToUnassigned
+    ) {
 
         HairCategory category = hairCategoryRepository.findById(id).orElse(null);
 
@@ -363,17 +366,32 @@ public class AdminController {
 
         long inUse = productRepository.countByCategory(category.getSlug());
 
-        if (inUse > 0) {
+        if (inUse > 0 && !moveToUnassigned) {
             return ResponseEntity.status(409).body(Map.of(
                     "message",
-                    "Can't remove \"" + category.getName() + "\" — " + inUse +
-                            " product" + (inUse == 1 ? "" : "s") + " still use" + (inUse == 1 ? "s" : "") + " this category."
+                    "\"" + category.getName() + "\" is still used by " + inUse +
+                            " product" + (inUse == 1 ? "" : "s") + ".",
+                    "productCount", inUse
             ));
+        }
+
+        if (inUse > 0) {
+            List<Product> affected = productRepository.findByCategory(category.getSlug());
+            for (Product product : affected) {
+                product.setCategory(null);
+                product.setActive(false);
+                productRepository.save(product);
+            }
         }
 
         hairCategoryRepository.deleteById(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(Map.of(
+                "message", inUse > 0
+                        ? inUse + " product" + (inUse == 1 ? "" : "s") + " moved to Unassigned and hidden from the site."
+                        : "Category removed.",
+                "movedCount", inUse
+        ));
     }
 
 
