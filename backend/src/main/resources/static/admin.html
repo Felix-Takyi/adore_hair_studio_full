@@ -714,6 +714,144 @@
             width: min(520px, 100%);
         }
 
+        /* ---------- CUSTOM ADMIN ALERTS ---------- */
+        .admin-alert-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(8,8,8,.70);
+            backdrop-filter: blur(6px);
+            animation: adminAlertFade .18s ease-out;
+        }
+
+        .admin-alert-modal {
+            width: min(520px, 100%);
+            overflow: hidden;
+            border: 1px solid #eadfca;
+            border-radius: 18px;
+            background: #fffdf8;
+            box-shadow: 0 30px 90px rgba(0,0,0,.42);
+            animation: adminAlertPop .2s var(--ease);
+        }
+
+        .admin-alert-head {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, var(--black), #211a12);
+            color: #fff;
+        }
+
+        .admin-alert-icon {
+            width: 42px;
+            height: 42px;
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--gold);
+            color: var(--black);
+            font-size: 17px;
+            box-shadow: 0 5px 18px rgba(201,168,76,.25);
+        }
+
+        .admin-alert-title {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-alert-title strong {
+            display: block;
+            font-family: var(--serif);
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .admin-alert-title span {
+            display: block;
+            margin-top: 2px;
+            font-size: 11px;
+            color: #d5cec3;
+            letter-spacing: .7px;
+            text-transform: uppercase;
+        }
+
+        .admin-alert-close {
+            width: 34px;
+            height: 34px;
+            flex: none;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,.09);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .admin-alert-close:hover { background: rgba(255,255,255,.16); }
+
+        .admin-alert-body {
+            padding: 22px 22px 18px;
+            color: var(--rich);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .admin-alert-body .alert-lead {
+            margin: 0 0 8px;
+            font-weight: 700;
+            color: var(--black);
+            font-size: 15px;
+        }
+
+        .admin-alert-body p { margin: 0; }
+
+        .admin-alert-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px 22px 20px;
+            border-top: 1px solid var(--line);
+            background: rgba(253,248,241,.55);
+        }
+
+        .admin-alert-actions .btn { min-width: 104px; }
+
+        html[data-theme="dark"] .admin-alert-modal {
+            background: #171615;
+            border-color: #3a3328;
+            color: #f2ece3;
+        }
+
+        html[data-theme="dark"] .admin-alert-body { color: #d8d0c6; }
+        html[data-theme="dark"] .admin-alert-body .alert-lead { color: #f7f0e7; }
+        html[data-theme="dark"] .admin-alert-actions {
+            background: #121110;
+            border-color: #2f2b27;
+        }
+
+        @keyframes adminAlertFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes adminAlertPop {
+            from { opacity: 0; transform: translateY(8px) scale(.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @media(max-width:520px) {
+            .admin-alert-overlay { padding: 14px; }
+            .admin-alert-body { padding: 20px 18px 16px; }
+            .admin-alert-actions { padding: 13px 18px 17px; }
+            .admin-alert-actions .btn { flex: 1; min-width: 0; }
+        }
+
         .cat-add-row {
             display: flex;
             gap: 10px;
@@ -2454,7 +2592,7 @@
         try {
             hairCategoriesCache = await api('/api/admin/hair-categories');
         } catch (e) {
-            alert('Could not load hair categories. Please try again.');
+            await showAdminMessage('Could not load hair categories. Please try again.', 'Category Error', 'Something went wrong');
             return;
         }
 
@@ -2544,15 +2682,115 @@
                 updateProductCategoryOptions();
             }
         } catch (e) {
-            alert(e.message || 'Could not add that category.');
+            await showAdminMessage(e.message || 'Could not add that category.', 'Category Error', 'Something went wrong');
         }
+    }
+
+    function showAdminAlert({
+        title = 'Adore Hair Studio',
+        subtitle = 'Message',
+        lead = '',
+        message = '',
+        confirmText = 'OK',
+        cancelText = 'Cancel',
+        showCancel = true,
+        icon = 'fa-triangle-exclamation',
+        danger = false
+    }) {
+        return new Promise(resolve => {
+            const existing = document.getElementById('adminAlertRoot');
+            if (existing) existing.remove();
+
+            const root = document.createElement('div');
+            root.id = 'adminAlertRoot';
+            root.innerHTML = `
+                <div class="admin-alert-overlay" role="presentation">
+                    <div class="admin-alert-modal" role="dialog" aria-modal="true" aria-labelledby="adminAlertTitle">
+                        <div class="admin-alert-head">
+                            <div class="admin-alert-icon" aria-hidden="true">
+                                <i class="fa-solid ${icon}"></i>
+                            </div>
+                            <div class="admin-alert-title">
+                                <strong id="adminAlertTitle">${esc(title)}</strong>
+                                <span>${esc(subtitle)}</span>
+                            </div>
+                            <button type="button" class="admin-alert-close" aria-label="Close message">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <div class="admin-alert-body">
+                            ${lead ? `<p class="alert-lead">${esc(lead)}</p>` : ''}
+                            <p>${message}</p>
+                        </div>
+                        <div class="admin-alert-actions">
+                            ${showCancel ? `<button type="button" class="btn secondary admin-alert-cancel">${esc(cancelText)}</button>` : ''}
+                            <button type="button" class="btn ${danger ? 'danger' : 'primary'} admin-alert-confirm">${esc(confirmText)}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(root);
+            document.body.style.overflow = 'hidden';
+
+            let closed = false;
+            const onKeyDown = event => {
+                if (event.key === 'Escape') finish(false);
+            };
+
+            const finish = value => {
+                if (closed) return;
+                closed = true;
+                document.removeEventListener('keydown', onKeyDown);
+                root.remove();
+                if (!document.querySelector('.product-form-overlay')) {
+                    document.body.style.overflow = '';
+                }
+                resolve(value);
+            };
+
+            root.querySelector('.admin-alert-confirm').addEventListener('click', () => finish(true));
+            root.querySelector('.admin-alert-close').addEventListener('click', () => finish(false));
+            const cancel = root.querySelector('.admin-alert-cancel');
+            if (cancel) cancel.addEventListener('click', () => finish(false));
+
+            root.querySelector('.admin-alert-overlay').addEventListener('click', event => {
+                if (event.target === event.currentTarget) finish(false);
+            });
+
+            document.addEventListener('keydown', onKeyDown);
+
+            requestAnimationFrame(() => root.querySelector('.admin-alert-confirm')?.focus());
+        });
+    }
+
+    function showAdminMessage(message, title = 'Adore Hair Studio', subtitle = 'Message') {
+        return showAdminAlert({
+            title,
+            subtitle,
+            message: esc(message),
+            confirmText: 'OK',
+            showCancel: false,
+            icon: 'fa-circle-info'
+        });
     }
 
     async function removeHairCategory(id) {
         const category = hairCategoriesCache.find(c => c.id === id);
         if (!category) return;
 
-        if (!confirm(`Remove the "${category.name}" category?`)) return;
+        const shouldRemove = await showAdminAlert({
+            title: 'Remove Hair Category',
+            subtitle: 'Please confirm',
+            lead: `Remove the "${category.name}" category?`,
+            message: 'This action will remove the category from your hair category list.',
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            icon: 'fa-trash-can',
+            danger: true
+        });
+
+        if (!shouldRemove) return;
 
         try {
             await api(`/api/admin/hair-categories/${id}`, { method: 'DELETE' });
@@ -2560,13 +2798,18 @@
         } catch (e) {
             if (e.status === 409) {
                 const count = (e.body && e.body.productCount) || 0;
+                const noun = count === 1 ? 'product' : 'products';
+                const pronoun = count === 1 ? 'It' : 'They';
 
-                const moveConfirm = confirm(
-                    `"${category.name}" is still used by ${count} product${count === 1 ? '' : 's'}.\n\n` +
-                    `Move ${count === 1 ? 'it' : 'them'} to Unassigned Wigs instead? ` +
-                    `${count === 1 ? 'It' : 'They'} will be hidden from the website but kept here in your admin ` +
-                    `list so you can give ${count === 1 ? 'it' : 'them'} a new category later.`
-                );
+                const moveConfirm = await showAdminAlert({
+                    title: 'Category Still In Use',
+                    subtitle: 'Category Move Notice',
+                    lead: `"${category.name}" is still used by ${count} ${noun}.`,
+                    message: `Move ${count === 1 ? 'it' : 'them'} to <strong>Unassigned Wigs</strong> instead? ${pronoun} will be hidden from the website but kept in your admin list so you can assign a new category later.`,
+                    confirmText: 'Move to Unassigned',
+                    cancelText: 'Cancel',
+                    icon: 'fa-tags'
+                });
 
                 if (!moveConfirm) return;
 
@@ -2574,10 +2817,10 @@
                     await api(`/api/admin/hair-categories/${id}?moveToUnassigned=true`, { method: 'DELETE' });
                     afterHairCategoryRemoved(id);
                 } catch (e2) {
-                    alert(e2.message || 'Could not remove that category.');
+                    await showAdminMessage(e2.message || 'Could not remove that category.', 'Category Error', 'Something went wrong');
                 }
             } else {
-                alert(e.message || 'Could not remove that category.');
+                await showAdminMessage(e.message || 'Could not remove that category.', 'Category Error', 'Something went wrong');
             }
         }
     }
