@@ -24,6 +24,7 @@ Adore Hair Studio is a full-stack hair studio and e-commerce website for display
 - **Git** — source-code version control.
 - **Git Bash** — running Git and project commands on Windows.
 - **GitHub** — remote source-code repository and version history.
+- **Uptimerobot** - keep the site awake every 5 minutes. https://dashboard.uptimerobot.com
 
 ### Deployment / hosting
 - **Vercel** — hosts the public frontend website.
